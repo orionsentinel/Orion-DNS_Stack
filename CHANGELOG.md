@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - Unified observability + Signal alerting 📈
+
+- **One monitoring stack** (`stacks/monitoring/`): Prometheus + Alertmanager +
+  Grafana + Loki + Blackbox + Signal paging, consolidated from the former
+  overlapping `observability/` and `monitoring/` stacks (removed
+  `stacks/observability/`).
+- **Degraded-state alerts** for THIS stack: VIP not resolving (critical), all
+  nodes down (critical), single node down, DNS latency, exporter-down, and host
+  CPU/mem/disk — routed to **Signal** via the existing webhook bridge.
+- **Provisioned Grafana** (Prometheus + Loki datasources, dashboards auto-loaded)
+  and a canonical-IP Prometheus scrape config (nodes .244/.245, VIP .243).
+- `stacks/nsm/` (Suricata IDS) stays separate; its logs can ship into this
+  stack's Loki (follow-up).
+
 ### Changed - Repository consolidation 🧹
 
 - **Single canonical deployment.** Removed the `deployments/` tree (7

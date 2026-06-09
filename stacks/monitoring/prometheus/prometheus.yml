@@ -1,90 +1,54 @@
-# Prometheus Configuration for DNS HA Stack
-# Scrapes metrics from Pi-hole, Unbound, and system exporters
-#
-
+# Prometheus — Orion Sentinel DNS HA monitoring.
+# Scrapes exporters the DNS nodes publish via the root compose `exporters`
+# profile (node_exporter :9100, pihole_exporter :9617 on each node host), and
+# probes DNS reachability of the VIP and each node via the blackbox exporter.
+# Canonical addresses (docs/networking.md): Node A .244, Node B .245, VIP .243.
 global:
   scrape_interval: 15s
   evaluation_interval: 15s
   external_labels:
-    cluster: 'orion-sentinel-dns-ha'
-    environment: 'production'
+    monitor: orion-dns-ha
 
-# Alertmanager configuration (optional)
 alerting:
   alertmanagers:
     - static_configs:
-        - targets:
-            - 'alertmanager:9093'
+        - targets: ['alertmanager:9093']
 
-# Load rules
 rule_files:
-  - 'alerts/*.yml'
+  - /etc/prometheus/alerts/*.yml
 
-# Scrape configurations
 scrape_configs:
-  # Prometheus itself
-  - job_name: 'prometheus'
+  - job_name: prometheus
     static_configs:
       - targets: ['localhost:9090']
 
-  # Node Exporter - System metrics
-  - job_name: 'node-exporter'
+  - job_name: alertmanager
     static_configs:
-      - targets:
-          - 'node-exporter:9100'
-        labels:
-          instance: 'dns-pi-1'
-          role: 'primary'
+      - targets: ['alertmanager:9093']
 
-  # Pi-hole Exporter - DNS blocking metrics
-  - job_name: 'pihole-primary'
+  # Host metrics from each DNS node (root compose `exporters` profile)
+  - job_name: node-exporter
     static_configs:
-      - targets:
-          - 'pihole-exporter-primary:9617'
-        labels:
-          instance: 'pihole-primary'
-          pihole_ip: '192.168.8.251'
+      - targets: ['192.168.8.244:9100']
+        labels: {node: pi-dns-1, role: primary}
+      - targets: ['192.168.8.245:9100']
+        labels: {node: pi-dns-2, role: backup}
 
-  - job_name: 'pihole-secondary'
+  # Pi-hole metrics from each node
+  - job_name: pihole
     static_configs:
-      - targets:
-          - 'pihole-exporter-secondary:9617'
-        labels:
-          instance: 'pihole-secondary'
-          pihole_ip: '192.168.8.252'
+      - targets: ['192.168.8.244:9617']
+        labels: {node: pi-dns-1, role: primary}
+      - targets: ['192.168.8.245:9617']
+        labels: {node: pi-dns-2, role: backup}
 
-  # Unbound Exporter - DNS resolver metrics
-  - job_name: 'unbound-primary'
-    static_configs:
-      - targets:
-          - 'unbound-exporter-primary:9167'
-        labels:
-          instance: 'unbound-primary'
-          unbound_ip: '192.168.8.253'
-
-  - job_name: 'unbound-secondary'
-    static_configs:
-      - targets:
-          - 'unbound-exporter-secondary:9167'
-        labels:
-          instance: 'unbound-secondary'
-          unbound_ip: '192.168.8.254'
-
-  # Blackbox Exporter - DNS latency probes
-  # NOTE: Update target IPs to match your deployment configuration
-  - job_name: 'blackbox-dns'
+  # DNS reachability of the floating VIP — the user-facing SLO
+  - job_name: dns_vip
     metrics_path: /probe
-    params:
-      module: [dns_google]
+    params: {module: [dns_google]}
     static_configs:
-      - targets:
-          - '192.168.8.249'  # VIP - update to match DNS_VIP in .env
-          - '192.168.8.251'  # Primary Pi-hole
-          - '192.168.8.252'  # Secondary Pi-hole
-          - '192.168.8.253'  # Primary Unbound
-          - '192.168.8.254'  # Secondary Unbound
-        labels:
-          probe_type: 'dns'
+      - targets: ['192.168.8.243']
+        labels: {target: vip}
     relabel_configs:
       - source_labels: [__address__]
         target_label: __param_target
@@ -93,51 +57,16 @@ scrape_configs:
       - target_label: __address__
         replacement: blackbox-exporter:9115
 
-  # DNS VIP Probe - Dedicated job for VIP availability monitoring
-  # This is the critical probe for HA - verifies the floating VIP is responding
-  # NOTE: Update the target IP to match your DNS_VIP from .env
-  - job_name: 'dns_vip_probe'
+  # DNS reachability of each node directly (detects a single-node failure)
+  - job_name: dns_nodes
     metrics_path: /probe
-    params:
-      module: [dns_google]
+    params: {module: [dns_google]}
     static_configs:
-      - targets:
-          - '192.168.8.249:53'  # DNS VIP (Keepalived) - update to match DNS_VIP in .env
-        labels:
-          probe_type: 'dns_vip'
-          role: 'vip'
+      - targets: ['192.168.8.244', '192.168.8.245']
     relabel_configs:
       - source_labels: [__address__]
-        regex: '(.+):.*'
         target_label: __param_target
-        replacement: '${1}'
       - source_labels: [__param_target]
         target_label: instance
       - target_label: __address__
         replacement: blackbox-exporter:9115
-
-  # Docker Container Metrics (via cAdvisor)
-  - job_name: 'cadvisor'
-    static_configs:
-      - targets:
-          - 'cadvisor:8080'
-        labels:
-          instance: 'dns-pi-1'
-
-  # Encrypted DNS Gateway (DoH/DoT) Metrics
-  # Blocky exposes Prometheus metrics on port 4000
-  # Only active when ORION_DOH_DOT_GATEWAY_ENABLED=1
-  - job_name: 'orion_dns_gateway'
-    static_configs:
-      - targets:
-          - 'orion-dns-gateway:4000'
-        labels:
-          instance: 'dns-gateway'
-          service: 'blocky'
-
-  # Keepalived VIP monitoring (via custom script exporter)
-  # TODO: Implement custom exporter for Keepalived status
-  # - job_name: 'keepalived'
-  #   static_configs:
-  #     - targets:
-  #         - 'keepalived-exporter:9165'

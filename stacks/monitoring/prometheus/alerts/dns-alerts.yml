@@ -1,120 +1,88 @@
-# Alert Rules for DNS HA Stack
-
+# Degraded-state alerts for the Orion Sentinel DNS HA stack.
+# Routed by Alertmanager to Signal. Addresses: nodes .244/.245, VIP .243.
 groups:
-  - name: dns_alerts
-    interval: 30s
+  - name: dns_availability
     rules:
-      # Pi-hole Down
-      - alert: PiHoleDown
-        expr: up{job=~"pihole.*"} == 0
+      - alert: VIPDnsDown
+        expr: probe_success{job="dns_vip"} == 0
+        for: 1m
+        labels: {severity: critical}
+        annotations:
+          summary: "DNS VIP is not resolving"
+          description: "The floating VIP 192.168.8.243 failed DNS resolution for >1m. Clients have no DNS. Check keepalived/VIP and the active node."
+
+      - alert: NodeDnsDown
+        expr: probe_success{job="dns_nodes"} == 0
         for: 2m
-        labels:
-          severity: critical
-          component: pihole
+        labels: {severity: warning}
         annotations:
-          summary: "Pi-hole instance {{ $labels.instance }} is down"
-          description: "Pi-hole {{ $labels.instance }} has been down for more than 2 minutes."
+          summary: "DNS down on a node ({{ $labels.instance }})"
+          description: "{{ $labels.instance }} stopped answering DNS for >2m. HA still served if the peer is up — investigate the failed node."
 
-      # Unbound Down
-      - alert: UnboundDown
-        expr: up{job=~"unbound.*"} == 0
-        for: 2m
-        labels:
-          severity: critical
-          component: unbound
+      - alert: AllDnsNodesDown
+        expr: max(probe_success{job="dns_nodes"}) == 0
+        for: 1m
+        labels: {severity: critical}
         annotations:
-          summary: "Unbound instance {{ $labels.instance }} is down"
-          description: "Unbound {{ $labels.instance }} has been down for more than 2 minutes."
+          summary: "ALL DNS nodes are down"
+          description: "Neither DNS node answered for >1m — full outage. Page now."
 
-      # High DNS Query Failure Rate
-      - alert: HighDNSFailureRate
-        expr: rate(pihole_queries_forwarded{status="failed"}[5m]) > 10
+      - alert: DnsLatencyHigh
+        expr: probe_dns_lookup_time_seconds{job=~"dns_.*"} > 0.5
         for: 5m
-        labels:
-          severity: warning
-          component: dns
+        labels: {severity: warning}
         annotations:
-          summary: "High DNS query failure rate on {{ $labels.instance }}"
-          description: "DNS query failure rate is {{ $value }} queries/sec on {{ $labels.instance }}."
+          summary: "DNS latency high ({{ $labels.instance }})"
+          description: "DNS lookups via {{ $labels.instance }} took >500ms for 5m."
 
-      # High DNS Latency
-      - alert: HighDNSLatency
-        expr: probe_dns_lookup_time_seconds > 1
-        for: 5m
-        labels:
-          severity: warning
-          component: dns
-        annotations:
-          summary: "High DNS latency on {{ $labels.instance }}"
-          description: "DNS lookup time is {{ $value }}s on {{ $labels.instance }}."
-
-  - name: system_alerts
-    interval: 60s
+  - name: targets_up
     rules:
-      # High CPU Usage
-      - alert: HighCPUUsage
-        expr: 100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 85
+      - alert: NodeExporterDown
+        expr: up{job="node-exporter"} == 0
+        for: 2m
+        labels: {severity: warning}
+        annotations:
+          summary: "node_exporter unreachable ({{ $labels.node }})"
+          description: "Prometheus cannot scrape node_exporter on {{ $labels.node }} ({{ $labels.instance }}) for >2m. Is the `exporters` profile up on that node?"
+
+      - alert: PiholeExporterDown
+        expr: up{job="pihole"} == 0
+        for: 2m
+        labels: {severity: warning}
+        annotations:
+          summary: "pihole_exporter unreachable ({{ $labels.node }})"
+          description: "Prometheus cannot scrape pihole_exporter on {{ $labels.node }} for >2m."
+
+      - alert: AlertmanagerDown
+        expr: up{job="alertmanager"} == 0
+        for: 2m
+        labels: {severity: critical}
+        annotations:
+          summary: "Alertmanager is down"
+          description: "Alertmanager target is down — alerts may not be delivered."
+
+  - name: node_health
+    rules:
+      - alert: HighCpuUsage
+        expr: 100 - (avg by (node) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 85
         for: 10m
-        labels:
-          severity: warning
-          component: system
+        labels: {severity: warning}
         annotations:
-          summary: "High CPU usage on {{ $labels.instance }}"
-          description: "CPU usage is above 85% on {{ $labels.instance }}."
+          summary: "High CPU on {{ $labels.node }}"
+          description: "CPU >85% for 10m on {{ $labels.node }}."
 
-      # High Memory Usage
       - alert: HighMemoryUsage
-        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100 > 90
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 90
         for: 10m
-        labels:
-          severity: warning
-          component: system
+        labels: {severity: warning}
         annotations:
-          summary: "High memory usage on {{ $labels.instance }}"
-          description: "Memory usage is above 90% on {{ $labels.instance }}."
+          summary: "High memory on {{ $labels.node }}"
+          description: "Memory >90% for 10m on {{ $labels.node }}."
 
-      # Low Disk Space
       - alert: LowDiskSpace
         expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 < 15
         for: 5m
-        labels:
-          severity: warning
-          component: system
+        labels: {severity: warning}
         annotations:
-          summary: "Low disk space on {{ $labels.instance }}"
-          description: "Disk space is below 15% on {{ $labels.instance }}."
-
-  - name: ha_alerts
-    interval: 30s
-    rules:
-      # VIP Failover
-      - alert: VIPFailover
-        expr: changes(up{job="keepalived"}[5m]) > 0
-        labels:
-          severity: info
-          component: ha
-        annotations:
-          summary: "Keepalived VIP failover detected"
-          description: "VIP has failed over in the last 5 minutes."
-
-      # Both Pi-hole instances down
-      - alert: AllPiHolesDown
-        expr: count(up{job=~"pihole.*"} == 0) == count(up{job=~"pihole.*"})
-        for: 1m
-        labels:
-          severity: critical
-          component: ha
-        annotations:
-          summary: "All Pi-hole instances are down"
-          description: "DNS blocking is completely unavailable!"
-
-      # Both Unbound instances down
-      - alert: AllUnboundDown
-        expr: count(up{job=~"unbound.*"} == 0) == count(up{job=~"unbound.*"})
-        for: 1m
-        labels:
-          severity: critical
-          component: ha
-        annotations:
-          summary: "All Unbound instances are down"
-          description: "DNS resolution is completely unavailable!"
+          summary: "Low disk on {{ $labels.node }}"
+          description: "Root filesystem <15% free on {{ $labels.node }}."
