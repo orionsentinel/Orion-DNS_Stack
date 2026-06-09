@@ -804,4 +804,4 @@ Contributions welcome! Please open an issue or pull request.
 
 ---
 
-**Ready to start?** See [INSTALL.md](INSTALL.md) for detailed installation instructions.
+**Ready to start?** Use the [one-command bootstrap](#fastest-path--one-command-bootstrap) above, or browse [docs/](docs/) for the full guides.
