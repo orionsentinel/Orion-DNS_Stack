@@ -45,8 +45,8 @@ jobs:
     name: Validate compose config
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: docker/setup-buildx-action@v3
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
       - name: Write CI env file
         run: printf '%s\n' "$CI_ENV" > .env
       - name: Validate canonical compose.yml (all profiles)
@@ -61,7 +61,7 @@ jobs:
     name: YAML lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - run: pip install yamllint
       - name: Write yamllint config
         run: |
@@ -87,7 +87,7 @@ jobs:
     name: Shell lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - run: sudo apt-get update && sudo apt-get install -y shellcheck
       - name: Run shellcheck (advisory until scripts/ is deduped)
         run: |
@@ -99,7 +99,7 @@ jobs:
     name: Dockerfile lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - name: Run hadolint on all Dockerfiles (advisory)
         run: |
           for df in $(find . -path ./.git -prune -o -name 'Dockerfile*' -type f -print); do
@@ -111,9 +111,9 @@ jobs:
     name: ARM64 build check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: docker/setup-qemu-action@v3
-      - uses: docker/setup-buildx-action@v3
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
       - name: Build keepalived image for linux/arm64
         run: |
           docker buildx build --platform linux/arm64 ./keepalived \
@@ -129,7 +129,7 @@ jobs:
     name: Security scan (Trivy)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - name: Trivy filesystem + secret + misconfig scan (advisory)
         run: |
           docker run --rm -v "$PWD:/repo" aquasec/trivy:latest fs \
@@ -141,7 +141,7 @@ jobs:
     name: Secret scan
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - name: Fail on any committed secret (Trivy secret scanner)
         run: |
           docker run --rm -v "$PWD:/repo" aquasec/trivy:latest fs \
@@ -151,7 +151,7 @@ jobs:
     name: Documentation validation
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - name: Required docs present
         run: |
           required="README.md docs/AUDIT.md docs/networking.md docs/architecture.md docs/troubleshooting.md docs/disaster-recovery.md"

@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security - Supply-chain hardening 🔐
+
+- **GitHub Actions pinned to commit SHAs** in CI (`actions/checkout`,
+  `docker/setup-buildx-action`, `docker/setup-qemu-action`) with `# vN` comments
+  so Dependabot can still bump them — a moved tag can no longer inject CI code.
+- Removed `:latest` base images from the buildable Dockerfiles
+  (`config/keepalived`, `stacks/dns/keepalived` → `alpine:3.20`;
+  `stacks/dns/unbound` → `klutchell/unbound:1.19.0`).
+- `SECURITY.md` documents the image/action pinning posture.
+
 ### Removed - Legacy documentation retired 📚
 
 - Retired 52 superseded/contradictory docs (duplicate install/upgrade/multi-node/

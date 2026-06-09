@@ -1,4 +1,4 @@
-FROM alpine:latest
+FROM alpine:3.20
 
 # Install keepalived and other required packages
 RUN apk add --no-cache \
