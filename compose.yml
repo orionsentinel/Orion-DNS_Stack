@@ -2,7 +2,7 @@
 # Do not use deprecated 'version:' key - modern compose spec doesn't require it
 services:
   pihole_unbound:
-    image: ghcr.io/mpgirro/docker-pihole-unbound:2025.03.0
+    image: ghcr.io/mpgirro/docker-pihole-unbound:2026.05.0
     container_name: pihole_unbound
     mem_limit: 1g          # cap so a leak can't take the whole Pi; generous for FTL + gravity rebuilds
     profiles:
