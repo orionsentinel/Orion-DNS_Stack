@@ -1,0 +1,128 @@
+# =============================================================================
+# Orion Sentinel — unified monitoring & alerting stack
+# Prometheus + Alertmanager + Grafana + Loki + Blackbox + Signal alerting.
+#
+# Runs on ONE host (e.g. Node B / 192.168.8.245). It scrapes the exporters the
+# DNS nodes publish via the root compose `exporters` profile, probes the VIP,
+# and pages you on Signal when DNS degrades.
+#
+#   cp .env.example .env && sudo nano .env     # set Grafana + Signal settings
+#   docker compose up -d
+#
+# Addresses are canonical (docs/networking.md): nodes .244/.245, VIP .243.
+# =============================================================================
+services:
+  prometheus:
+    image: prom/prometheus:v3.1.0
+    container_name: prometheus
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.enable-lifecycle'
+    ports: ["9090:9090"]
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/alerts:/etc/prometheus/alerts:ro
+      - prometheus_data:/prometheus
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    networks: [monitoring]
+
+  alertmanager:
+    image: prom/alertmanager:v0.28.0
+    container_name: alertmanager
+    restart: unless-stopped
+    command: ['--config.file=/etc/alertmanager/alertmanager.yml']
+    ports: ["9093:9093"]
+    volumes:
+      - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager_data:/alertmanager
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:9093/-/healthy"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    networks: [monitoring]
+
+  grafana:
+    image: grafana/grafana:11.4.0
+    container_name: grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-changeme}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_SERVER_ROOT_URL: ${GRAFANA_ROOT_URL:-http://localhost:3000}
+    ports: ["3000:3000"]
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    depends_on: [prometheus, loki]
+    networks: [monitoring]
+
+  loki:
+    image: grafana/loki:3.3.2
+    container_name: loki
+    restart: unless-stopped
+    command: ['-config.file=/etc/loki/local-config.yaml']
+    ports: ["3100:3100"]
+    volumes:
+      - loki_data:/loki
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3100/ready"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    networks: [monitoring]
+
+  blackbox-exporter:
+    image: prom/blackbox-exporter:v0.25.0
+    container_name: blackbox-exporter
+    restart: unless-stopped
+    command: ['--config.file=/etc/blackbox/blackbox.yml']
+    volumes:
+      - ./blackbox/blackbox.yml:/etc/blackbox/blackbox.yml:ro
+    networks: [monitoring]
+
+  # Signal alerting: alertmanager -> bridge -> signal-cli REST -> your phone
+  signal-cli-rest-api:
+    image: bbernhard/signal-cli-rest-api:0.94
+    container_name: signal-cli-rest-api
+    restart: unless-stopped
+    environment:
+      MODE: ${SIGNAL_CLI_MODE:-native}
+    ports: ["8081:8080"]
+    volumes:
+      - ./signal-cli-config:/home/.local/share/signal-cli
+    networks: [monitoring]
+
+  signal-webhook-bridge:
+    build: ./signal-webhook-bridge
+    container_name: signal-webhook-bridge
+    restart: unless-stopped
+    environment:
+      SIGNAL_CLI_REST_API_URL: ${SIGNAL_CLI_REST_API_URL:-http://signal-cli-rest-api:8080}
+      SIGNAL_NUMBER: ${SIGNAL_NUMBER:-}
+      SIGNAL_RECIPIENTS: ${SIGNAL_RECIPIENTS:-}
+    depends_on: [signal-cli-rest-api]
+    networks: [monitoring]
+
+volumes:
+  prometheus_data:
+  alertmanager_data:
+  grafana_data:
+  loki_data:
+
+networks:
+  monitoring:
+    driver: bridge

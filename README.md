@@ -572,7 +572,7 @@ make up-all
 - **Promtail** (`:9080`) - Ships logs to Loki
 
 **Configuration:**
-Set `LOKI_URL` in `.env` to point to your Loki instance (default: `http://192.168.8.100:3100`).
+Set `LOKI_URL` in `.env` to point to your Loki instance (default: `http://192.168.8.245:3100`).
 
 ### Prometheus Pushgateway (Optional)
 
@@ -731,10 +731,10 @@ level=error msg="error sending batch" error="Post \"\": unsupported protocol sch
 1. Check your `.env` file has `LOKI_URL` set correctly:
    ```bash
    # Correct format (include full path):
-   LOKI_URL=http://192.168.8.100:3100/loki/api/v1/push
+   LOKI_URL=http://192.168.8.245:3100/loki/api/v1/push
    
    # Wrong (missing path):
-   # LOKI_URL=http://192.168.8.100:3100
+   # LOKI_URL=http://192.168.8.245:3100
    ```
 
 2. Restart promtail:
