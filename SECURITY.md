@@ -35,8 +35,14 @@ repo is public, those values must be considered **compromised**:
   (`NET_ADMIN`, plus `NET_RAW` for keepalived's VRRP); review before adding more.
 - Local recursive resolution (Unbound → root, DNSSEC) by default — no third-party
   DNS unless explicitly configured.
-- Images are **pinned by tag** and checked for a `linux/arm64` manifest in CI.
-- Dependencies are tracked by Dependabot; merge security updates promptly.
+- Images are **pinned to explicit version tags** (no `:latest` in the canonical
+  build path) and checked for a `linux/arm64` manifest in CI.
+- **GitHub Actions are pinned to full commit SHAs** (with a `# vN` comment so
+  Dependabot can still propose updates) — prevents a moved tag from injecting
+  untrusted CI code.
+- Dependencies and base images are tracked by Dependabot (pip, docker,
+  github-actions); merge security updates promptly. Digest-level image pinning is
+  a candidate future step (best driven by Renovate to avoid stale-digest churn).
 
 ## Supported versions
 
