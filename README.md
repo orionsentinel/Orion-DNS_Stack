@@ -14,7 +14,7 @@ Two-node VRRP failover for ad-blocking, privacy-focused DNS on Raspberry Pi.
 └────────────────────────┬────────────────────────────────┘
                          │
                          ▼
-            VIP: 192.168.8.250/24 (eth1)
+            VIP: 192.168.8.243/24 (eth0)
                   Managed by VRRP
                          │
         ┌────────────────┴────────────────┐
@@ -22,7 +22,7 @@ Two-node VRRP failover for ad-blocking, privacy-focused DNS on Raspberry Pi.
         ▼                                 ▼
 ┌──────────────────┐            ┌──────────────────┐
 │   Node A (Pri)   │            │   Node B (Sec)   │
-│  192.168.8.249   │◄──────────►│  192.168.8.243   │
+│  192.168.8.244   │◄──────────►│  192.168.8.245   │
 │                  │   Unicast  │                  │
 │  Priority: 200   │   VRRP     │  Priority: 150   │
 │  Role: MASTER    │            │  Role: BACKUP    │
@@ -41,7 +41,7 @@ Two-node VRRP failover for ad-blocking, privacy-focused DNS on Raspberry Pi.
   - Pi-hole for ad/tracker blocking
   - Unbound for local recursive DNS (DNSSEC-validated, privacy-first)
 - **Keepalived**: VRRP daemon for automatic VIP failover
-- **VIP**: `192.168.8.250/24` floats between nodes on `eth1`
+- **VIP**: `192.168.8.243/24` floats between nodes on `eth0`
 - **Health Checks**: DNS resolution monitored every 5 seconds
 
 ---
@@ -67,8 +67,8 @@ Perfect for testing or simple home use:
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/orionsentinel/Orion-sentinel-ha-dns.git
-cd Orion-sentinel-ha-dns
+git clone https://github.com/orionsentinel/Orion-DNS_Stack.git
+cd Orion-DNS_Stack
 
 # 2. Configure environment
 cp .env.example .env
@@ -95,7 +95,7 @@ On **both** Pi nodes, clone the repository to `/opt/orion-dns-ha`:
 ```bash
 sudo mkdir -p /opt
 sudo chown $USER:$USER /opt
-git clone https://github.com/orionsentinel/Orion-sentinel-ha-dns.git /opt/orion-dns-ha
+git clone https://github.com/orionsentinel/Orion-DNS_Stack.git /opt/orion-dns-ha
 cd /opt/orion-dns-ha
 ```
 
@@ -128,13 +128,13 @@ nano .env
 Set the following in `.env`:
 ```bash
 NODE_NAME=pi1-dns
-NODE_IP=192.168.8.249
+NODE_IP=192.168.8.244
 NODE_ROLE=MASTER
 KEEPALIVED_PRIORITY=200
-VIP_ADDRESS=192.168.8.250
-NETWORK_INTERFACE=eth1
-PEER_IP=192.168.8.243
-UNICAST_SRC_IP=192.168.8.249
+VIP_ADDRESS=192.168.8.243
+NETWORK_INTERFACE=eth0
+PEER_IP=192.168.8.245
+UNICAST_SRC_IP=192.168.8.244
 WEBPASSWORD=<your-secure-password>
 # CRITICAL: VRRP_PASSWORD must be EXACTLY 8 characters (VRRP PASS auth limitation)
 VRRP_PASSWORD=oriondns
@@ -162,13 +162,13 @@ nano .env
 Set the following in `.env`:
 ```bash
 NODE_NAME=pi2-dns
-NODE_IP=192.168.8.243
+NODE_IP=192.168.8.245
 NODE_ROLE=BACKUP
 KEEPALIVED_PRIORITY=150
-VIP_ADDRESS=192.168.8.250
-NETWORK_INTERFACE=eth1
-PEER_IP=192.168.8.249
-UNICAST_SRC_IP=192.168.8.243
+VIP_ADDRESS=192.168.8.243
+NETWORK_INTERFACE=eth0
+PEER_IP=192.168.8.244
+UNICAST_SRC_IP=192.168.8.245
 WEBPASSWORD=<your-secure-password>
 # CRITICAL: Must match primary node password - exactly 8 characters!
 VRRP_PASSWORD=oriondns
@@ -176,8 +176,8 @@ LOKI_URL=http://<loki-server>:3100/loki/api/v1/push
 ```
 
 > **📝 Note:** Alternatively, use the new simplified templates:
-> - Primary: `cp env/primary.env .env`
-> - Secondary: `cp env/secondary.env .env`
+> - Primary: `cp env/primary.env.example .env`
+> - Secondary: `cp env/secondary.env.example .env`
 > 
 > These templates have the correct IPs pre-configured for a standard setup.
 > You only need to change WEBPASSWORD and optionally VRRP_PASSWORD.
@@ -192,12 +192,12 @@ On **both** nodes, run the self-check:
 
 #### Step 6: Start the Stack
 
-**IMPORTANT:** Always run Docker Compose from `/opt/orion-dns-ha/Orion-sentinel-ha-dns`
+**IMPORTANT:** Always run Docker Compose from `/opt/orion-dns-ha`
 
 On **Node A (Primary)**:
 
 ```bash
-cd /opt/orion-dns-ha/Orion-sentinel-ha-dns
+cd /opt/orion-dns-ha
 docker compose --profile two-node-ha-primary up -d
 
 # If using Promtail for logging:
@@ -207,7 +207,7 @@ docker compose --profile two-node-ha-primary --profile exporters up -d
 On **Node B (Secondary)**:
 
 ```bash
-cd /opt/orion-dns-ha/Orion-sentinel-ha-dns
+cd /opt/orion-dns-ha
 docker compose --profile two-node-ha-backup up -d
 
 # If using Promtail for logging:
@@ -219,7 +219,7 @@ docker compose --profile two-node-ha-backup --profile exporters up -d
 Run the verification script on **both** nodes:
 
 ```bash
-cd /opt/orion-dns-ha/Orion-sentinel-ha-dns
+cd /opt/orion-dns-ha
 ./scripts/verify-ha.sh
 ```
 
@@ -241,14 +241,14 @@ This will check:
 dig github.com @127.0.0.1 +short
 
 # Test via VIP (from any machine on the network)
-dig github.com @192.168.8.250 +short
+dig github.com @192.168.8.243 +short
 ```
 
 #### Step 9: Test Failover
 
 ```bash
 # From any client:
-dig @192.168.8.250 github.com  # Should work
+dig @192.168.8.243 github.com  # Should work
 
 # Stop primary node's containers
 # On Node A:
@@ -256,10 +256,10 @@ docker stop pihole_unbound keepalived
 
 # Wait ~15 seconds for VIP failover
 # On Node B, check VIP was acquired:
-ip addr show eth1 | grep 192.168.8.250
+ip addr show eth0 | grep 192.168.8.243
 
 # DNS should still work via VIP:
-dig @192.168.8.250 github.com  # Still resolves!
+dig @192.168.8.243 github.com  # Still resolves!
 
 # Restart primary:
 # On Node A:
@@ -289,12 +289,12 @@ grep unicast_src_ip /etc/keepalived/keepalived.conf
 ```
 
 **Expected:**
-- **Primary:** `unicast_src_ip 192.168.8.250` and `unicast_peer { 192.168.8.251 }`
-- **Secondary:** `unicast_src_ip 192.168.8.251` and `unicast_peer { 192.168.8.250 }`
+- **Primary:** `unicast_src_ip 192.168.8.243` and `unicast_peer { 192.168.8.245 }`
+- **Secondary:** `unicast_src_ip 192.168.8.245` and `unicast_peer { 192.168.8.243 }`
 
 If peer IPs are missing or wrong, fix your `.env` file and recreate:
 ```bash
-cd /opt/orion-dns-ha/Orion-sentinel-ha-dns
+cd /opt/orion-dns-ha
 docker compose --profile two-node-ha-primary up -d --build --force-recreate keepalived
 ```
 
@@ -306,7 +306,7 @@ On **primary:**
 ```bash
 docker exec -it keepalived sh -c '
 apk add --no-cache tcpdump >/dev/null 2>&1 || true
-tcpdump -ni eth1 proto 112 -c 10
+tcpdump -ni eth0 proto 112 -c 10
 '
 ```
 
@@ -332,13 +332,13 @@ docker restart keepalived
 
 **Note:** The updated entrypoint.sh now fixes this automatically on every container start.
 
-#### 4. Check for NIC Flapping (eth1 up/down events)
+#### 4. Check for NIC Flapping (eth0 up/down events)
 
-If you see logs like `Netlink reports eth1 down` or `Interface eth1 deleted`:
+If you see logs like `Netlink reports eth0 down` or `Interface eth0 deleted`:
 
 ```bash
-dmesg -T | egrep -i 'eth1|link up|link down|usb|rtl|tg3|r8152|reset' | tail -200
-ip link show eth1
+dmesg -T | egrep -i 'eth0|link up|link down|usb|rtl|tg3|r8152|reset' | tail -200
+ip link show eth0
 ```
 
 This indicates NIC driver issues (common with USB 2.5G adapters). Solutions:
@@ -404,8 +404,8 @@ Keepalived only manages VIP failover. To synchronize Pi-hole configuration betwe
 Add to your `.env` file on the **secondary** node:
 ```bash
 PIHOLE_SYNC_ENABLED=true
-PRIMARY_NODE_IP=192.168.8.250
-SECONDARY_NODE_IP=192.168.8.251
+PRIMARY_NODE_IP=192.168.8.243
+SECONDARY_NODE_IP=192.168.8.245
 SYNC_GRAVITY_DB=true  # Set to false to skip gravity database
 ```
 
@@ -415,12 +415,12 @@ SYNC_GRAVITY_DB=true  # Set to false to skip gravity database
 ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519 -N ""
 
 # Copy to primary node
-ssh-copy-id root@192.168.8.250
+ssh-copy-id root@192.168.8.243
 ```
 
 **Manual sync** (run on secondary node):
 ```bash
-cd /opt/orion-dns-ha/Orion-sentinel-ha-dns
+cd /opt/orion-dns-ha
 ./scripts/pihole-sync.sh
 
 # Dry run to see what would be synced
@@ -610,11 +610,11 @@ sudo systemctl enable --now orion-dns-ha-backup.timer
 
 ```bash
 # Test against VIP
-dig @192.168.8.250 github.com
+dig @192.168.8.243 github.com
 
 # Test against specific node
-dig @192.168.8.249 github.com  # Primary
-dig @192.168.8.243 github.com  # Secondary
+dig @192.168.8.244 github.com  # Primary
+dig @192.168.8.245 github.com  # Secondary
 ```
 
 ### Check VRRP Status
@@ -624,7 +624,7 @@ dig @192.168.8.243 github.com  # Secondary
 docker logs keepalived
 
 # Check VIP assignment
-ip addr show eth1 | grep 192.168.8.250
+ip addr show eth0 | grep 192.168.8.243
 
 # View VRRP state transitions
 tail -f /var/log/keepalived-notify.log  # Inside keepalived container
@@ -635,10 +635,10 @@ docker exec keepalived tail -f /var/log/keepalived-notify.log
 
 #### No DNS response on VIP
 
-**Symptoms:** `dig @192.168.8.250` times out
+**Symptoms:** `dig @192.168.8.243` times out
 
 **Fixes:**
-1. Verify VIP is assigned: `ip addr show eth1`
+1. Verify VIP is assigned: `ip addr show eth0`
 2. Check `network_mode: host` is set in `compose.yml`
 3. Ensure `DNSMASQ_LISTENING=all` in `.env`
 4. Verify firewall allows port 53 (UDP/TCP)
@@ -648,7 +648,7 @@ docker exec keepalived tail -f /var/log/keepalived-notify.log
 **Symptoms:** VIP doesn't appear on either node
 
 **Fixes:**
-1. Verify `NETWORK_INTERFACE=eth1` matches your interface name
+1. Verify `NETWORK_INTERFACE=eth0` matches your interface name
 2. Check `USE_UNICAST_VRRP=true` is set
 3. Verify `PEER_IP` is set on both nodes
 4. Ensure `VRRP_PASSWORD` matches on both nodes
@@ -749,8 +749,8 @@ level=error msg="error sending batch" error="Post \"\": unsupported protocol sch
 - Linux kernel with VRRP support
 
 **Network:**
-- Two available IPs for nodes (e.g., 192.168.8.249, 192.168.8.243)
-- One VIP for DNS service (e.g., 192.168.8.250)
+- Two available IPs for nodes (e.g., 192.168.8.244, 192.168.8.245)
+- One VIP for DNS service (e.g., 192.168.8.243)
 - Multicast or unicast VRRP capability (unicast recommended)
 
 ---

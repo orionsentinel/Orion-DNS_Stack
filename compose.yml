@@ -20,7 +20,7 @@ services:
       FTLCONF_webserver_api_password: ${FTLCONF_webserver_api_password:-}
       FTLCONF_dns_upstreams: ${FTLCONF_dns_upstreams:-127.0.0.1#5335}
       FTLCONF_dns_dnssec: ${FTLCONF_dns_dnssec:-true}
-      FTLCONF_local_ipv4: ${NODE_IP:-192.168.8.249}
+      FTLCONF_local_ipv4: ${NODE_IP:-192.168.8.244}
       DNSMASQ_LISTENING: ${DNSMASQ_LISTENING:-all}
       REV_SERVER: ${REV_SERVER:-true}
       REV_SERVER_TARGET: ${REV_SERVER_TARGET:-192.168.8.1}
@@ -59,9 +59,9 @@ services:
       NODE_ROLE: ${NODE_ROLE:-MASTER}
       KEEPALIVED_PRIORITY: ${KEEPALIVED_PRIORITY:-200}
       ROUTER_ID: ${ROUTER_ID:-orion-dns-ha}
-      VIP_ADDRESS: ${VIP_ADDRESS:-192.168.8.250}
+      VIP_ADDRESS: ${VIP_ADDRESS:-192.168.8.243}
       VIP_NETMASK: ${VIP_NETMASK:-32}
-      NETWORK_INTERFACE: ${NETWORK_INTERFACE:-eth1}
+      NETWORK_INTERFACE: ${NETWORK_INTERFACE:-eth0}
       VIRTUAL_ROUTER_ID: ${VIRTUAL_ROUTER_ID:-51}
       VRRP_PASSWORD: ${VRRP_PASSWORD:-oriondns}
       USE_UNICAST_VRRP: ${USE_UNICAST_VRRP:-true}
@@ -143,7 +143,7 @@ services:
     network_mode: host
     restart: unless-stopped
     environment:
-      - LOKI_URL=${LOKI_URL:-http://192.168.8.100:3100/loki/api/v1/push}
+      - LOKI_URL=${LOKI_URL:-http://192.168.8.245:3100/loki/api/v1/push}
       - HOSTNAME=${HOSTNAME:-orion-dns}
     volumes:
       - ./promtail/config.yml:/etc/promtail/config.yml:ro
@@ -163,7 +163,7 @@ services:
       - netsec-plus-evebox
     restart: unless-stopped
     environment:
-      - LOKI_URL=${LOKI_URL:-http://192.168.8.100:3100/loki/api/v1/push}
+      - LOKI_URL=${LOKI_URL:-http://192.168.8.245:3100/loki/api/v1/push}
       - HOSTNAME=${HOSTNAME:-orion-netsec}
     volumes:
       - ./promtail/netsec-config.yml:/etc/promtail/config.yml:ro
