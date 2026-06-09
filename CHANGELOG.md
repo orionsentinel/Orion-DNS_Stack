@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed - Pi-hole + Unbound update ⬆️
+
+- Bump the canonical DNS image `ghcr.io/mpgirro/docker-pihole-unbound`
+  **2025.03.0 → 2026.05.0** (Pi-hole v6, latest; Unbound bundled). Same major
+  version — no breaking config change. CI gates it (ARM64 manifest + compose).
+- **Roll out BACKUP-node-first** with a backup; see `docs/upgrade-guide.md`.
+
 ### Added - IoT containment 📷
 
 - `profiles/iot.yml` + `scripts/setup-iot-containment.sh` + `docs/iot-containment.md`:

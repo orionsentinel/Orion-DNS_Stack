@@ -121,7 +121,7 @@ jobs:
       - name: Confirm canonical DNS image is multi-arch (arm64)
         run: |
           docker buildx imagetools inspect \
-            ghcr.io/mpgirro/docker-pihole-unbound:2025.03.0 | grep -i 'linux/arm64' \
+            ghcr.io/mpgirro/docker-pihole-unbound:2026.05.0 | grep -i 'linux/arm64' \
             && echo "✓ pihole-unbound publishes linux/arm64" \
             || (echo "✗ canonical DNS image missing arm64 manifest" && exit 1)
 

@@ -38,7 +38,7 @@ Three parallel, overlapping definitions of the **same** DNS stack:
 
 1. **Root `compose.yml`** — the canonical-by-README path. Profile-based
    (`single-node`, `two-node-ha-primary`, `two-node-ha-backup`). Uses the unified
-   ARM64-safe image `ghcr.io/mpgirro/docker-pihole-unbound:2025.03.0` + custom
+   ARM64-safe image `ghcr.io/mpgirro/docker-pihole-unbound:2026.05.0` + custom
    `./keepalived` build. Also embeds optional exporters and a NetSec profile
    (Suricata/cAdvisor/EveBox). **Keep — this is the canonical runtime.**
 2. **`deployments/` (7 variants × node1/node2 = 14 compose files)** —

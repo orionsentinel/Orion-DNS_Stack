@@ -26,7 +26,7 @@ VIP (Keepalived/VRRP) so DNS survives a node failure or reboot.
 ## Components
 
 - **`pihole_unbound`** — one unified container,
-  `ghcr.io/mpgirro/docker-pihole-unbound:2025.03.0` (ARM64-safe, replaces the old
+  `ghcr.io/mpgirro/docker-pihole-unbound:2026.05.0` (ARM64-safe, replaces the old
   `mvance/unbound-rpi` that failed on 64-bit Pi OS). Pi-hole listens on `:53` and
   forwards to Unbound on `127.0.0.1#5335` for full local recursive resolution
   with DNSSEC. `network_mode: host`, `restart: unless-stopped`.

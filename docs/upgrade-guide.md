@@ -23,7 +23,7 @@ confirm the VIP moves to B, restart A).
 
 ## Pinning image versions
 
-The canonical DNS image is pinned (`...docker-pihole-unbound:2025.03.0`). To move
+The canonical DNS image is pinned (`...docker-pihole-unbound:2026.05.0`). To move
 to a newer tag, bump it in `compose.yml`, commit on a `feature/*` branch, let CI
 validate (compose-config + ARM64 manifest check), then roll it out per above.
 Avoid `:latest` in production — pin and upgrade intentionally.
