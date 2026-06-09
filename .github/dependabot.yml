@@ -1,0 +1,44 @@
+# Dependabot — keep dependencies and the CI/CD supply chain current.
+# Security updates are always on; these are the scheduled version updates.
+version: 2
+updates:
+  # --- Python apps (helper web UIs) ---
+  - package-ecosystem: pip
+    directory: /wizard
+    schedule: {interval: weekly}
+    groups:
+      wizard-deps: {patterns: ["*"]}
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: pip
+    directory: /stacks/setup-ui
+    schedule: {interval: weekly}
+    groups:
+      setup-ui-deps: {patterns: ["*"]}
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: pip
+    directory: /stacks/self-healing
+    schedule: {interval: weekly}
+    groups:
+      self-healing-deps: {patterns: ["*"]}
+    open-pull-requests-limit: 5
+
+  # --- Container base images (canonical builds) ---
+  - package-ecosystem: docker
+    directory: /keepalived
+    schedule: {interval: weekly}
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: docker
+    directory: /config/unbound
+    schedule: {interval: weekly}
+    open-pull-requests-limit: 5
+
+  # --- GitHub Actions (pin/upgrade CI actions) ---
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: {interval: weekly}
+    groups:
+      ci-actions: {patterns: ["*"]}
+    open-pull-requests-limit: 5

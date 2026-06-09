@@ -137,6 +137,16 @@ jobs:
             --severity CRITICAL,HIGH \
             --no-progress --exit-code 0 /repo
 
+  secret-scan:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fail on any committed secret (Trivy secret scanner)
+        run: |
+          docker run --rm -v "$PWD:/repo" aquasec/trivy:latest fs \
+            --scanners secret --no-progress --exit-code 1 /repo
+
   docs-check:
     name: Documentation validation
     runs-on: ubuntu-latest
