@@ -68,6 +68,29 @@ state:
 
 See `docs/disaster-recovery.md` for backup/restore and the <1h rebuild target.
 
+## Self-healing
+
+Recovery is layered — each layer covers a different failure mode, so there is no
+bespoke "self-healing service" to maintain:
+
+| Layer | Mechanism | Heals |
+|---|---|---|
+| 1. Crash | `restart: unless-stopped` on every service | a container that exits/crashes |
+| 2. Wedged | Docker **healthcheck** + **`autoheal`** sidecar | a container that's running but stopped answering (`pihole_unbound` is `autoheal`-labelled; its probe is `dig @127.0.0.1 pi.hole`) |
+| 3. DNS broken | **keepalived** `check_dns.sh` → VIP failover | recursion/DNS failure on a node → VIP floats to the healthy peer |
+| 4. Reboot / host | **systemd** units + timer (`ops/orion-dns-health.sh`, hourly/min) | survives reboot; host-level watchdog restart |
+
+Notes:
+- `autoheal` only restarts containers labelled `autoheal=true`. **keepalived is
+  deliberately not labelled** — restarting it would flap the VIP; it self-heals by
+  releasing the VIP instead.
+- Tunables (in `.env`): `AUTOHEAL_INTERVAL`, `AUTOHEAL_START_PERIOD`. The probe is
+  forgiving (`retries: 5`, `start_period: 90s`) so transient blips don't trigger
+  restarts.
+- Degraded states still **page you** via the monitoring stack
+  (`stacks/monitoring/`, alerts → Signal) — self-healing handles recovery,
+  alerting handles the cases it can't.
+
 ## Design choices (trade-offs)
 
 - **Unified Pi-hole+Unbound image** over separate containers: fewer moving parts

@@ -17,13 +17,6 @@ updates:
       setup-ui-deps: {patterns: ["*"]}
     open-pull-requests-limit: 5
 
-  - package-ecosystem: pip
-    directory: /stacks/self-healing
-    schedule: {interval: weekly}
-    groups:
-      self-healing-deps: {patterns: ["*"]}
-    open-pull-requests-limit: 5
-
   # --- Container base images (canonical builds) ---
   - package-ecosystem: docker
     directory: /keepalived
