@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed - Legacy documentation retired 📚
+
+- Retired 52 superseded/contradictory docs (duplicate install/upgrade/multi-node/
+  disaster-recovery/testing guides, SPOG/integration notes, and `VPN_EDITION_*`
+  docs that referenced the removed `deployments/`). History remains in git.
+- The canonical set is now `README.md`, `SECURITY.md`, `CHANGELOG.md`, and
+  `docs/` (architecture, networking, troubleshooting, disaster-recovery,
+  upgrade-guide, branching-strategy, AUDIT, REVIEW) plus topic guides
+  (profiles, blocklists, pihole config, hardening, netsec). Added `docs/README.md`
+  as the index.
+
 ### Added - Unified observability + Signal alerting 📈
 
 - **One monitoring stack** (`stacks/monitoring/`): Prometheus + Alertmanager +
