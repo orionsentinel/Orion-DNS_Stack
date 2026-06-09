@@ -130,15 +130,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Trivy filesystem + misconfig scan
-        uses: aquasecurity/trivy-action@0.28.0
-        with:
-          scan-type: fs
-          scan-ref: .
-          scanners: vuln,secret,misconfig
-          severity: CRITICAL,HIGH
-          exit-code: '0'
-          format: table
+      - name: Trivy filesystem + secret + misconfig scan (advisory)
+        run: |
+          docker run --rm -v "$PWD:/repo" aquasec/trivy:latest fs \
+            --scanners vuln,secret,misconfig \
+            --severity CRITICAL,HIGH \
+            --no-progress --exit-code 0 /repo
 
   docs-check:
     name: Documentation validation
