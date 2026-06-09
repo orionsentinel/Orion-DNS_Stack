@@ -7,7 +7,7 @@
 # - DNSSEC validation and privacy hardening
 # - Docker HEALTHCHECK using unbound-host for real DNS resolution testing
 
-FROM ghcr.io/klutchell/unbound:1.19.0
+FROM ghcr.io/klutchell/unbound:1.25.1
 
 # Install bash for entrypoint script (unbound-host is included in base image)
 USER root
