@@ -42,6 +42,18 @@ services:
       # If the file exists, Unbound forwards to NextDNS over DoT.
       # If absent/unmounted, Unbound performs full local recursive resolution.
       - ./unbound/nextdns-forward.conf:/etc/unbound/unbound.conf.d/nextdns-forward.conf:ro
+    # Self-healing (layer 2): liveness probe. If the DNS server stops answering on
+    # 127.0.0.1:53 the container is marked unhealthy and `autoheal` restarts it.
+    # (Full-chain recursion failure is handled by keepalived's check_dns.sh → VIP
+    # failover. dig exits 0 even on NXDOMAIN, so this only fails if FTL is wedged.)
+    healthcheck:
+      test: ["CMD-SHELL", "dig +tries=1 +time=3 @127.0.0.1 pi.hole >/dev/null 2>&1 || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 90s
+    labels:
+      autoheal: "true"
 
   keepalived:
     build:
@@ -80,6 +92,34 @@ services:
       PROM_INSTANCE_LABEL: ${PROM_INSTANCE_LABEL:-}
     volumes:
       - ./keepalived/config:/etc/keepalived
+    # Liveness only — NOT autoheal-labelled. keepalived self-heals the HA layer by
+    # releasing the VIP on DNS failure; restarting its container would flap the VIP.
+    healthcheck:
+      test: ["CMD-SHELL", "pidof keepalived >/dev/null 2>&1 || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  # Self-healing (layer 2): watchdog that restarts containers labelled
+  # autoheal=true when their Docker healthcheck reports unhealthy. Pairs with
+  # `restart: unless-stopped` (crash recovery) and keepalived (HA/VIP failover).
+  # See docs/architecture.md → "Self-healing".
+  autoheal:
+    image: willfarrell/autoheal:1.2.0
+    container_name: autoheal
+    profiles:
+      - single-node
+      - two-node-ha-primary
+      - two-node-ha-backup
+    restart: unless-stopped
+    environment:
+      AUTOHEAL_CONTAINER_LABEL: autoheal
+      AUTOHEAL_INTERVAL: ${AUTOHEAL_INTERVAL:-10}
+      AUTOHEAL_START_PERIOD: ${AUTOHEAL_START_PERIOD:-120}
+      AUTOHEAL_DEFAULT_STOP_TIMEOUT: 15
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
 
   # Monitoring Exporters
   node_exporter:

@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - Layered self-healing 🩹
+
+- **Docker healthchecks** on `pihole_unbound` (DNS liveness) and `keepalived`
+  (process liveness).
+- **`autoheal` sidecar** (`willfarrell/autoheal`, profiled with the core stack)
+  restarts `autoheal`-labelled containers that go unhealthy. keepalived is
+  intentionally unlabelled (it self-heals by releasing the VIP).
+- Documented the four-layer recovery model in `docs/architecture.md`
+  (restart → autoheal → keepalived failover → systemd).
+
+### Removed - Stub "AI" stacks 🧹
+
+- Removed `stacks/{ai-watchdog,self-healing,traffic-analytics,agents}` — stub-grade,
+  not wired into the canonical stack; the self-healing intent is now met properly by
+  the layers above, and the NSM/AI mandate lives in `Orion-sentinel-netsec-ai`.
+- Dropped the corresponding Dependabot entry.
+
 ### Security - Supply-chain hardening 🔐
 
 - **GitHub Actions pinned to commit SHAs** in CI (`actions/checkout`,
