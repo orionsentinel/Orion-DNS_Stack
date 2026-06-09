@@ -15,7 +15,6 @@ grafana_dashboards/
 env/
 
 # Deployment configs
-deployments/
 
 # Backups
 backups/

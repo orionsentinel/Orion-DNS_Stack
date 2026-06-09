@@ -61,6 +61,27 @@ Two-node VRRP failover for ad-blocking, privacy-focused DNS on Raspberry Pi.
 > ls compose.yml  # Should exist
 > ```
 
+### Fastest path — one-command bootstrap
+
+On a fresh Raspberry Pi OS (64-bit), clone and run `bootstrap.sh`. It installs
+Docker, scaffolds data dirs, seeds `.env` from the role template, brings up the
+stack, and verifies it:
+
+```bash
+sudo apt update
+git clone https://github.com/orionsentinel/Orion-DNS_Stack.git /opt/orion-dns-ha
+cd /opt/orion-dns-ha
+
+# Node A (primary). It stops so you can set secrets in .env, then re-run.
+sudo ./bootstrap.sh --role primary
+# Node B (secondary):   sudo ./bootstrap.sh --role secondary
+# Single node (no HA):  sudo ./bootstrap.sh --role single
+# Pin a USB-C/2.5-10G NIC at the same time: add --configure-nic  (see docs/networking.md)
+```
+
+The manual steps below are the same flow, broken out, if you prefer to do it by
+hand or need to troubleshoot.
+
 ### Single-Node Setup
 
 Perfect for testing or simple home use:

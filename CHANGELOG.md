@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed - Repository consolidation 🧹
+
+- **Single canonical deployment.** Removed the `deployments/` tree (7
+  near-duplicate variants that still shipped the broken ARM32 `mvance/unbound-rpi`
+  image). The profile-based root `compose.yml` is now the one supported path for
+  the 2-node HA topology (`docs/architecture.md`).
+- **One installer.** Added `bootstrap.sh` (`clone → ./bootstrap.sh → working
+  node`) and removed ~20 overlapping install/deploy/test scripts it supersedes.
+  See the README "Fastest path — one-command bootstrap".
+- **Migration:** existing nodes keep running. To adopt the canonical path, see
+  `docs/disaster-recovery.md` (rebuild) or just
+  `docker compose --profile two-node-ha-primary up -d` from the repo root.
+
 ### Added - v2.5.0 HA Reliability Improvements (2024-12-19) 🔒
 
 - **Strict Keepalived Validation** - Prevent split-brain scenarios
