@@ -1,0 +1,31 @@
+name: Dependabot auto-merge
+
+# Enables GitHub's native auto-merge on Dependabot PRs: they merge themselves the
+# moment required status checks pass — no polling, no babysitting.
+#
+# REQUIRES two repo settings (one-time):
+#   1. Settings → General → Pull Requests → "Allow auto-merge"  = ON
+#   2. Branch protection on `main` with required status checks (so auto-merge has
+#      something to wait for). Without these the enable step is a no-op (logged).
+#
+# CI (.github/workflows/ci.yml) is the gate — a Dependabot PR only merges if the
+# compose/ARM64/Trivy/secret/docs checks are green.
+on: pull_request
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-merge:
+    name: Enable auto-merge for Dependabot
+    runs-on: ubuntu-latest
+    if: ${{ github.event.pull_request.user.login == 'dependabot[bot]' }}
+    steps:
+      - name: Enable auto-merge (squash)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: |
+          gh pr merge --auto --squash "$PR_URL" \
+            || echo "::notice::Auto-merge not enabled. Turn on 'Allow auto-merge' and add branch protection with required checks on main."

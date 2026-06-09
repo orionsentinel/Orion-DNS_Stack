@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - Dependabot auto-merge 🤖
+
+- `.github/workflows/dependabot-automerge.yml`: enables GitHub native auto-merge on
+  Dependabot PRs so they merge themselves once CI passes. Requires the repo
+  "Allow auto-merge" setting + branch protection with required checks (one-time).
+
 ### Added - License + failover test 🧪
 
 - **MIT `LICENSE`** added; README license section updated.
