@@ -1,0 +1,66 @@
+# IoT Containment Profile
+#
+# A Pi-hole *group* that contains chatty smart-home/IoT devices (cameras, plugs)
+# so their telemetry/analytics is blocked WITHOUT breaking core function, and
+# their traffic is visible. Apply with: scripts/setup-iot-containment.sh
+#
+# ⚠️ Opt-in & reversible. Blocking too aggressively can break device features
+#    (e.g. Tapo remote viewing / firmware updates). Start conservative, watch the
+#    query log / Grafana, then tighten. See docs/iot-containment.md.
+
+name: iot
+description: Containment group for cameras/IoT — block telemetry, keep core function
+category: iot
+
+# Pi-hole group these rules apply to (created if missing)
+group:
+  name: IoT
+  description: Smart-home / IoT containment
+
+# Device members of the IoT group (from your network inventory — edit to taste).
+# These clients get normal blocking PLUS the iot-only rules below.
+clients:
+  - ip: 192.168.8.100   # Tapo C220 (hallway)
+    comment: Tapo C220 hallway
+  - ip: 192.168.8.107   # Tapo D210
+    comment: Tapo D210
+  - ip: 192.168.8.137   # Tapo C400
+    comment: Tapo C400
+  - ip: 192.168.8.142   # Tapo C410
+    comment: Tapo C410
+  - ip: 192.168.8.109   # unknown Tapo
+    comment: unknown Tapo
+  - ip: 192.168.8.209   # unknown device
+    comment: unknown device
+  - ip: 192.168.8.101   # unknown device
+    comment: unknown device
+
+# Regex blacklist applied to the IoT group only (type 3 = regex deny).
+# CONSERVATIVE starter set: telemetry/analytics/metrics patterns. It deliberately
+# does NOT block *.tplinkcloud.com (that path carries Tapo remote-access). Use the
+# visibility step in docs/iot-containment.md to confirm what each device contacts,
+# then add the specific analytics hostnames you see.
+regex_deny:
+  - '(^|\.)telemetry\.'
+  - '(^|\.)metrics\.'
+  - '(^|\.)analytics\.'
+  - '(^|\.)tracking\.'
+  - '(^|\.)data-?collect(ion)?\.'
+  - '(^|\.)tplinkra\.com$'          # TP-Link analytics/data (verify against your logs)
+  - '(^|\.)tplinkcloud-?metrics'    # TP-Link metrics buckets (verify)
+
+# IoT-focused adlists to attach to the IoT group (optional, on top of base lists).
+blocklists:
+  - name: WaLLy3K IoT / smart-TV telemetry
+    url: https://raw.githubusercontent.com/Perflyst/PiHoleBlocklist/master/SmartTV.txt
+    enabled: true
+    description: Smart-TV / connected-device telemetry
+  - name: Perflyst Android tracking
+    url: https://raw.githubusercontent.com/Perflyst/PiHoleBlocklist/master/android-tracking.txt
+    enabled: false
+    description: Mobile/IoT tracking (enable after testing)
+
+# Allowlist safety valve — never block these even if a deny regex matches.
+# Add a device's essential cloud endpoint here if containment breaks it.
+allow:
+  # - api.tplinkcloud.com   # uncomment if Tapo remote access breaks
