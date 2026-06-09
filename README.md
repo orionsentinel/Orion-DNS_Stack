@@ -267,6 +267,14 @@ dig github.com @192.168.8.243 +short
 
 #### Step 9: Test Failover
 
+Automated (run on the MASTER node — briefly disrupts DNS, then self-restores):
+
+```bash
+make test-failover        # or: ./scripts/test-failover.sh
+```
+
+Or do it by hand:
+
 ```bash
 # From any client:
 dig @192.168.8.243 github.com  # Should work
@@ -788,7 +796,7 @@ Operational references:
 
 ## License
 
-This project is open source. See the repository for license details.
+Released under the [MIT License](LICENSE).
 
 ---
 
