@@ -27,6 +27,57 @@ files — not in the code.
 - `NETWORK_INTERFACE=eth0` — the Pi's onboard NIC. If you use a USB NIC for a
   dedicated VRRP link, set it to that interface (e.g. `eth1`) in both `.env` files.
 
+## Dedicated USB-C / USB 2.5–10G NIC (fixed IP)
+
+Each Pi can serve DNS — and float the VRRP VIP — over a fast USB-C/USB Ethernet
+adapter instead of (or alongside) the onboard `eth0`. The
+[`scripts/configure-nic.sh`](../scripts/configure-nic.sh) helper pins that NIC to
+a **static IP that survives reboots**, sets the MTU (jumbo frames for 2.5–10G),
+and disables the EEE / Wake-on-LAN quirks that cause USB-NIC link flapping
+(see `troubleshooting.md`). It works on Raspberry Pi OS Bookworm
+(NetworkManager) and falls back to `systemd-networkd`.
+
+> Bandwidth note: a USB 3.x adapter negotiates up to its USB ceiling (commonly
+> 2.5/5 Gb on a Pi 5's 5 Gb USB; "10G" adapters fall back accordingly). The fixed
+> IP, jumbo MTU, and stability tuning apply regardless of the negotiated speed.
+
+### Steps (per Pi)
+
+```bash
+cd /opt/orion-dns-ha
+
+# 1. Find the adapter (note its name and MAC)
+make list-nics                 # or: ./scripts/configure-nic.sh --list
+
+# 2. Point the stack at it and set the static IP in your .env
+sudo nano .env
+#   NETWORK_INTERFACE=eth1            # the USB NIC (or bind by LINK_MAC instead)
+#   NODE_IP=192.168.8.244            # .245 on Node B
+#   LINK_MTU=9000                    # optional: jumbo frames end-to-end
+#   LINK_MAC=AA:BB:CC:DD:EE:FF       # optional: survives eth1/enx renaming
+
+# 3. Apply (idempotent; persists across reboots)
+make configure-nic               # or: sudo ./scripts/configure-nic.sh
+
+# 4. Verify
+./scripts/configure-nic.sh --verify
+```
+
+You can also drive it entirely by flags without `.env`:
+
+```bash
+sudo ./scripts/configure-nic.sh --iface eth1 --ip 192.168.8.244/24 \
+     --gateway 192.168.8.1 --dns 127.0.0.1 --mtu 9000
+# or bind to the MAC so it doesn't matter what the kernel names it:
+sudo ./scripts/configure-nic.sh --mac AA:BB:CC:DD:EE:FF --ip 192.168.8.245/24 --mtu 9000
+```
+
+After the NIC is fixed, bring the stack up with the matching profile
+(`two-node-ha-primary` on Node A, `two-node-ha-backup` on Node B). Keepalived
+binds VRRP and the VIP to `NETWORK_INTERFACE`, so the VIP now floats on the fast
+link. Jumbo frames require the switch port and every host on the path to agree on
+the same MTU.
+
 ## Ports
 
 | Port | Service | Where |
