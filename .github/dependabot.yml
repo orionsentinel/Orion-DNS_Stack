@@ -2,14 +2,6 @@
 # Security updates are always on; these are the scheduled version updates.
 version: 2
 updates:
-  # --- Python apps (helper web UIs) ---
-  - package-ecosystem: pip
-    directory: /wizard
-    schedule: {interval: weekly}
-    groups:
-      wizard-deps: {patterns: ["*"]}
-    open-pull-requests-limit: 5
-
   # --- Container base images (canonical builds) ---
   - package-ecosystem: docker
     directory: /keepalived

@@ -1,5 +1,0 @@
----
-# Docker Configuration - Connect to local Docker daemon
-
-local:
-  socket: /var/run/docker.sock

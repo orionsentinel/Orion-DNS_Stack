@@ -14,12 +14,9 @@ Once the devices resolve through the VIP (`client-network-setup.md`), look at
 their traffic:
 
 - **Pi-hole UI** → Query Log → filter by the device IP (e.g. `192.168.8.100`).
-- **Grafana / Loki** (if the monitoring stack is up) — query the Pi-hole log
-  stream by client:
-  ```
-  {job="pihole"} |= "192.168.8.100"
-  ```
-  A panel of *top domains per IoT client* shows the phone-home endpoints.
+  Sort by domain to spot the telemetry/analytics endpoints each device hits.
+- CLI: `docker exec pihole_unbound pihole -t` (live tail) or query the FTL DB
+  under `pihole/etc-pihole/`.
 
 Note which hostnames are **telemetry/analytics** (safe to block) vs **functional**
 (cloud relay, firmware — keep).
@@ -71,5 +68,5 @@ Tighten from your own logs rather than blanket-blocking a vendor's cloud.
 
 These devices are the least trustworthy things on your LAN and the most likely to
 exfiltrate. Containing them turns "mystery traffic" into a reviewed allowlist, and
-every block is visible in Grafana — a concrete step toward the NSM goals in
+every block is visible in the Pi-hole query log — a concrete step toward the NSM goals in
 `REVIEW.md`.

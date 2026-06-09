@@ -161,7 +161,6 @@ UNICAST_SRC_IP=192.168.8.244
 WEBPASSWORD=<your-secure-password>
 # CRITICAL: VRRP_PASSWORD must be EXACTLY 8 characters (VRRP PASS auth limitation)
 VRRP_PASSWORD=oriondns
-LOKI_URL=http://<loki-server>:3100/loki/api/v1/push
 ```
 
 > **⚠️ IMPORTANT: VRRP_PASSWORD Requirements**
@@ -195,7 +194,6 @@ UNICAST_SRC_IP=192.168.8.245
 WEBPASSWORD=<your-secure-password>
 # CRITICAL: Must match primary node password - exactly 8 characters!
 VRRP_PASSWORD=oriondns
-LOKI_URL=http://<loki-server>:3100/loki/api/v1/push
 ```
 
 > **📝 Note:** Alternatively, use the new simplified templates:
@@ -223,8 +221,6 @@ On **Node A (Primary)**:
 cd /opt/orion-dns-ha
 docker compose --profile two-node-ha-primary up -d
 
-# If using Promtail for logging:
-docker compose --profile two-node-ha-primary --profile exporters up -d
 ```
 
 On **Node B (Secondary)**:
@@ -233,8 +229,6 @@ On **Node B (Secondary)**:
 cd /opt/orion-dns-ha
 docker compose --profile two-node-ha-backup up -d
 
-# If using Promtail for logging:
-docker compose --profile two-node-ha-backup --profile exporters up -d
 ```
 
 #### Step 7: Verify HA Configuration
@@ -404,8 +398,6 @@ make help
 # Start core services (auto-detects single/two-node mode from .env)
 make up-core
 
-# Start with monitoring exporters
-make up-all
 
 # Stop all services
 make down
@@ -562,45 +554,6 @@ To disable and return to local recursion, comment out the `forward-zone` block.
 
 ---
 
-## Monitoring Integration
-
-### Exporters Profile
-
-Enable Prometheus exporters and log shipping to Loki/Grafana:
-
-```bash
-# Start with exporters
-docker compose --profile two-node-ha-primary --profile exporters up -d
-
-# Or via Make
-make up-all
-```
-
-**Exporters:**
-- **Node Exporter** (`:9100`) - System metrics (CPU, memory, disk, network)
-- **Pi-hole Exporter** (`:9617`) - DNS query metrics, blocking stats
-- **Promtail** (`:9080`) - Ships logs to Loki
-
-**Configuration:**
-Set `LOKI_URL` in `.env` to point to your Loki instance (default: `http://192.168.8.245:3100`).
-
-### Prometheus Pushgateway (Optional)
-
-Keepalived state transitions can push metrics to Prometheus Pushgateway:
-
-```bash
-# In .env file
-PROM_PUSHGATEWAY_URL=http://pushgateway.example.com:9091
-PROM_JOB_NAME=orion_dns_ha
-PROM_INSTANCE_LABEL=node-primary
-```
-
-**Metric:** `keepalived_vrrp_state`
-- `1` = MASTER
-- `0` = BACKUP
-- `-1` = FAULT
-
----
 
 ## Systemd Integration
 
@@ -727,35 +680,6 @@ docker compose restart pihole_unbound
 ```
 
 **Prevention:** Always run `./scripts/bootstrap_dirs.sh` before first deployment.
-
-#### Promtail "unsupported protocol scheme" error
-
-**Symptoms:** Promtail logs show:
-```
-level=error msg="error sending batch" error="Post \"\": unsupported protocol scheme \"\""
-```
-
-**Cause:** `LOKI_URL` is empty or doesn't include the full path.
-
-**Fix:**
-1. Check your `.env` file has `LOKI_URL` set correctly:
-   ```bash
-   # Correct format (include full path):
-   LOKI_URL=http://192.168.8.245:3100/loki/api/v1/push
-   
-   # Wrong (missing path):
-   # LOKI_URL=http://192.168.8.245:3100
-   ```
-
-2. Restart promtail:
-   ```bash
-   docker compose restart promtail
-   ```
-
-3. Verify logs are being sent:
-   ```bash
-   docker logs promtail --tail 50
-   ```
 
 ---
 

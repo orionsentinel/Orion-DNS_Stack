@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed - Radical simplification (minimum viable privacy stack) 🪓
+
+Trimmed the repo to exactly what serves the core goal — block ads/trackers/telemetry
+with the least complexity. **159 files removed.**
+
+- **Removed non-core stacks:** `stacks/{nsm,vpn,sso,remote-access,management,dashboard,dns,monitoring}`,
+  `wizard/`, `grafana_dashboards/`, `promtail/`, `health/`, `config/suricata/`.
+  None contributed to DNS ad/tracker blocking; several were added attack surface.
+- **`compose.yml` → 3 services:** `pihole_unbound` + `keepalived` + `autoheal`.
+  Dropped the `exporters` and `netsec` (Suricata/cAdvisor/EveBox) profiles — no
+  Prometheus/Grafana/Loki by design. Pi-hole's admin page is the dashboard.
+- **`scripts/` 49 → 14:** kept bootstrap/verify-ha/selfcheck/validate-env/doctor/
+  configure-nic/pihole-sync/test-failover/backup-lists/whitelist/iot/health; removed
+  ~35 orphaned/duplicate scripts. Rewrote `selfcheck.sh` to a minimal validator.
+- **Env templates 11 → 3** (`.env.example` + `env/{primary,secondary}.env.example`).
+- Pruned Makefile exporter targets, the `wizard` Dependabot entry, and the
+  monitoring/exporter sections from the README and docs.
+
+Architecture unchanged where it matters: 2-Pi Pi-hole+Unbound (recursive, ARM64)
+with keepalived VRRP. See `docs/architecture.md`.
+
 ### Changed - Pi-hole + Unbound update ⬆️
 
 - Bump the canonical DNS image `ghcr.io/mpgirro/docker-pihole-unbound`
