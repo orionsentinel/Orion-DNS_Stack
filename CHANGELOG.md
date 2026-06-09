@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - License + failover test 🧪
+
+- **MIT `LICENSE`** added; README license section updated.
+- **`scripts/test-failover.sh`** (`make test-failover`): integration test that
+  forces a VRRP failover (stops DNS on the MASTER), asserts the VIP floats to the
+  peer and keeps resolving, then verifies the node recovers. Restores containers
+  on exit/interrupt.
+- Fixed a stale default VIP (`.249` → `.243`) in `scripts/verify-ha.sh`.
+
 ### Added - Layered self-healing 🩹
 
 - **Docker healthchecks** on `pihole_unbound` (DNS liveness) and `keepalived`

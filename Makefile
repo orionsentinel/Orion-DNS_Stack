@@ -10,7 +10,7 @@
 #   make restart          - Restart all services
 #   make clean            - Remove all containers and volumes (DESTRUCTIVE)
 
-.PHONY: help up-core up-exporters up-all down restart logs logs-follow health-check test backup clean validate-env configure-nic list-nics
+.PHONY: help up-core up-exporters up-all down restart logs logs-follow health-check test backup clean validate-env configure-nic list-nics selfcheck test-failover
 
 # Default target
 .DEFAULT_GOAL := help
@@ -141,6 +141,9 @@ test: health-check ## Run health check (alias)
 selfcheck: ## Validate configuration files
 	@echo "$(BOLD)Running self-check...$(NC)"
 	@bash scripts/selfcheck.sh
+
+test-failover: ## Integration test: force VRRP failover and verify recovery (disruptive)
+	@bash scripts/test-failover.sh
 
 bootstrap: ## Create required directories and files
 	@echo "$(BOLD)Bootstrapping directories...$(NC)"
