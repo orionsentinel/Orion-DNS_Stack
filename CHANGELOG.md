@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - Setup & network docs 📘
+
+- `docs/two-pi-quickstart.md` — full two-Pi setup on one page, with a
+  prerequisites checklist (hardware/OS/network/accounts).
+- `docs/client-network-setup.md` — pointing the LAN at the VIP, plus the device /
+  **IPv6** / DoH bypass fixes. Indexed in `docs/README.md`.
+
 ### Changed - Cleanup & hardening pass 🧹
 
 - Removed `config/keepalived/` (duplicate of the canonical `/keepalived`) and

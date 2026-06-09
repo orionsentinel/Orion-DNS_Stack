@@ -109,6 +109,8 @@ dig @localhost github.com
 
 For production high-availability:
 
+> 📘 Prefer one page? See **[docs/two-pi-quickstart.md](docs/two-pi-quickstart.md)** for the full end-to-end two-Pi setup, and **[docs/client-network-setup.md](docs/client-network-setup.md)** to point your network at it.
+
 #### Step 1: Clone on Both Nodes
 
 On **both** Pi nodes, clone the repository to `/opt/orion-dns-ha`:
