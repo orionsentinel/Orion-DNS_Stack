@@ -22,8 +22,8 @@ A two-Pi HA deployment provides:
 
 ```bash
 # On BOTH Pis:
-git clone https://github.com/orionsentinel/Orion-sentinel-ha-dns.git
-cd Orion-sentinel-ha-dns
+git clone https://github.com/orionsentinel/Orion-DNS_Stack.git
+cd Orion-DNS_Stack
 
 # Copy two-pi-ha template
 cp env/.env.two-pi-ha.example .env
@@ -62,8 +62,8 @@ cd stacks/dns && docker compose --profile two-pi-ha-pi2 up -d
 
 1. Clone repository:
    ```bash
-   git clone https://github.com/orionsentinel/Orion-sentinel-ha-dns.git
-   cd Orion-sentinel-ha-dns
+   git clone https://github.com/orionsentinel/Orion-DNS_Stack.git
+   cd Orion-DNS_Stack
    ```
 
 2. Configure environment:
@@ -93,13 +93,13 @@ cd stacks/dns && docker compose --profile two-pi-ha-pi2 up -d
 
 1. Clone repository:
    ```bash
-   git clone https://github.com/orionsentinel/Orion-sentinel-ha-dns.git
-   cd Orion-sentinel-ha-dns
+   git clone https://github.com/orionsentinel/Orion-DNS_Stack.git
+   cd Orion-DNS_Stack
    ```
 
 2. Copy .env from Pi1 and modify:
    ```bash
-   scp pi@192.168.8.250:~/Orion-sentinel-ha-dns/.env .env
+   scp pi@192.168.8.250:~/Orion-DNS_Stack/.env .env
    nano .env
    ```
 

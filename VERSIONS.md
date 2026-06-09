@@ -1263,14 +1263,14 @@ For additional support:
 - **Documentation:** See SECURITY_GUIDE.md, USER_GUIDE.md, INSTALLATION_GUIDE.md
 - **Pre-installation Check:** `bash scripts/install-check.sh`
 - **Test Suite:** `bash scripts/test-installation.sh`
-- **GitHub Issues:** https://github.com/orionsentinel/Orion-sentinel-ha-dns/issues
+- **GitHub Issues:** https://github.com/orionsentinel/Orion-DNS_Stack/issues
 
 ---
 
 ## Support
 
 For issues or questions:
-- GitHub Issues: https://github.com/orionsentinel/Orion-sentinel-ha-dns/issues
+- GitHub Issues: https://github.com/orionsentinel/Orion-DNS_Stack/issues
 - Documentation: README.md and scripts/README.md
 - Test suite: `bash scripts/test-installation.sh`
 - Security Guide: SECURITY_GUIDE.md

@@ -15,8 +15,8 @@ This document provides a test plan for validating the Level 1 and Level 2 instal
 
 1. **Fresh Clone:**
    ```bash
-   git clone https://github.com/orionsentinel/Orion-sentinel-ha-dns.git
-   cd Orion-sentinel-ha-dns
+   git clone https://github.com/orionsentinel/Orion-DNS_Stack.git
+   cd Orion-DNS_Stack
    ```
 
 2. **No existing .env:**

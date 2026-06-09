@@ -54,7 +54,7 @@ sudo ufw allow from 192.168.8.0/24 to any port 443 proto tcp
 
 ```bash
 # On Pi DNS node
-cd /path/to/Orion-sentinel-ha-dns
+cd /path/to/Orion-DNS_Stack
 ./scripts/deploy-spog-agent.sh pi-dns 192.168.8.100
 ```
 
@@ -62,7 +62,7 @@ cd /path/to/Orion-sentinel-ha-dns
 
 ```bash
 # On NetSec Pi
-cd /path/to/Orion-sentinel-ha-dns
+cd /path/to/Orion-DNS_Stack
 ./scripts/deploy-spog-agent.sh pi-netsec 192.168.8.100
 ```
 

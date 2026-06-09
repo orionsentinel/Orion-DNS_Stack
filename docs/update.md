@@ -146,7 +146,7 @@ docker compose --profile dns-core up -d
 
 ```bash
 # Navigate to repository
-cd /path/to/Orion-sentinel-ha-dns
+cd /path/to/Orion-DNS_Stack
 
 # Backup current state
 sudo ./backup/backup-volumes.sh

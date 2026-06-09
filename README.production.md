@@ -16,8 +16,8 @@
 
 ```bash
 # Clone the repository
-git clone https://github.com/orionsentinel/Orion-sentinel-ha-dns.git
-cd Orion-sentinel-ha-dns
+git clone https://github.com/orionsentinel/Orion-DNS_Stack.git
+cd Orion-DNS_Stack
 
 # Copy environment template
 cp .env.production.example .env
@@ -461,7 +461,7 @@ docker compose logs
 - **Documentation:** See [docs/](docs/) folder
 - **Logs:** `make logs` or `docker compose logs`
 - **Health Check:** `make health-check`
-- **Issues:** [GitHub Issues](https://github.com/orionsentinel/Orion-sentinel-ha-dns/issues)
+- **Issues:** [GitHub Issues](https://github.com/orionsentinel/Orion-DNS_Stack/issues)
 
 ---
 
@@ -540,8 +540,8 @@ This project is open source. See the repository for license details.
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/orionsentinel/Orion-sentinel-ha-dns.git
-cd Orion-sentinel-ha-dns
+git clone https://github.com/orionsentinel/Orion-DNS_Stack.git
+cd Orion-DNS_Stack
 
 # 2. Run bootstrap (on each Pi)
 sudo ./scripts/bootstrap-node.sh --node=pi1 --ip=192.168.8.250
@@ -559,6 +559,6 @@ make up-core
 
 **Questions? Issues? Suggestions?**
 
-Open an [issue](https://github.com/orionsentinel/Orion-sentinel-ha-dns/issues) or check the [documentation](docs/).
+Open an [issue](https://github.com/orionsentinel/Orion-DNS_Stack/issues) or check the [documentation](docs/).
 
 **Happy DNS filtering!** 🛡️

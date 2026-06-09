@@ -730,9 +730,19 @@ level=error msg="error sending batch" error="Post \"\": unsupported protocol sch
 
 ## Documentation
 
-- **[INSTALL.md](INSTALL.md)** - Comprehensive installation guide
-- **[ops/README.md](ops/README.md)** - Operational scripts documentation
-- **[systemd/README.md](systemd/README.md)** - Systemd integration guide
+Canonical docs (single source of truth):
+
+- **[docs/architecture.md](docs/architecture.md)** - Components, profiles, data flow
+- **[docs/networking.md](docs/networking.md)** - The one canonical IP/VRRP scheme
+- **[docs/troubleshooting.md](docs/troubleshooting.md)** - Common failures + fixes
+- **[docs/disaster-recovery.md](docs/disaster-recovery.md)** - Backup/restore, <1h rebuild
+- **[docs/upgrade-guide.md](docs/upgrade-guide.md)** - Rolling, zero-downtime upgrades
+- **[docs/AUDIT.md](docs/AUDIT.md)** - Architecture audit (A–J) and target design
+
+Operational references:
+
+- **[ops/README.md](ops/README.md)** - Operational scripts
+- **[systemd/README.md](systemd/README.md)** - Systemd integration
 
 ---
 

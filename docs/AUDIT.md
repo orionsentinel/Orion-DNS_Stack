@@ -71,8 +71,9 @@ management,ai-watchdog,self-healing,traffic-analytics,agents}`.
 - **`deployments/*` use `mvance/unbound-rpi`** — the exact image known to fail on
   64-bit Raspberry Pi OS. Root compose & `stacks/dns` already moved to ARM64-safe
   images; the deployments never got the fix.
-- **README clone URL wrong:** `Orion-sentinel-ha-dns.git` (repo is
-  `Orion-DNS_Stack`) — copy-paste install fails at step 1.
+- **README clone URL was wrong** — pointed at a non-existent `…-ha-dns` repo
+  instead of `Orion-DNS_Stack`, so copy-paste install failed at step 1.
+  (Fixed across all docs in this PR.)
 - **`stacks/dns/coredns/Corefile`** hard-codes `.251/.252` and is wired into nothing.
 - **Broken symlinks** `stacks/{dns,observability,ai-watchdog}/.env → ../../.env`
   (target absent).

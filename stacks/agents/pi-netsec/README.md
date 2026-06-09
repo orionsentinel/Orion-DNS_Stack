@@ -55,7 +55,7 @@ This agent is part of the **Single Pane of Glass (SPoG)** architecture:
 Use the provided deployment script for easy setup:
 
 ```bash
-cd /path/to/Orion-sentinel-ha-dns
+cd /path/to/Orion-DNS_Stack
 ./scripts/deploy-spog-agent.sh pi-netsec 192.168.8.100
 ```
 

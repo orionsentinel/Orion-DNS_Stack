@@ -801,7 +801,7 @@ A: Yes, designed for 24/7 operation. Self-healing handles failures automatically
 - **Getting Started**: [GETTING_STARTED.md](GETTING_STARTED.md)
 
 ### Support Channels
-- **GitHub Issues**: https://github.com/orionsentinel/Orion-sentinel-ha-dns/issues
+- **GitHub Issues**: https://github.com/orionsentinel/Orion-DNS_Stack/issues
 - **Pi-hole Forum**: https://discourse.pi-hole.net/
 - **Docker Forums**: https://forums.docker.com/
 
@@ -860,7 +860,7 @@ Print this for easy reference:
 ║ View Logs:     docker logs pihole_primary                 ║
 ║ Restart:       docker compose restart                     ║
 ║                                                            ║
-║ Support:       github.com/orionsentinel/Orion-sentinel-ha-dns║
+║ Support:       github.com/orionsentinel/Orion-DNS_Stack║
 ╚════════════════════════════════════════════════════════════╝
 ```
 

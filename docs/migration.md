@@ -86,7 +86,7 @@ This method gives you the cleanest setup with minimal risk.
    git pull
    
    # Or fresh clone
-   git clone https://github.com/orionsentinel/Orion-sentinel-ha-dns.git orion-dns-ha
+   git clone https://github.com/orionsentinel/Orion-DNS_Stack.git orion-dns-ha
    cd orion-dns-ha
    ```
 
@@ -413,7 +413,7 @@ bash scripts/restore-config.sh backups/dns-ha-backup-*.tar.gz
 
 - **Documentation:** See main README.production.md
 - **Troubleshooting:** See TROUBLESHOOTING.md
-- **Issues:** https://github.com/orionsentinel/Orion-sentinel-ha-dns/issues
+- **Issues:** https://github.com/orionsentinel/Orion-DNS_Stack/issues
 - **Backup:** You saved a backup, right? 😅
 
 ## Migration Checklist

@@ -109,7 +109,7 @@ exit
 ```bash
 # Clone to recommended location
 cd /opt
-sudo git clone https://github.com/orionsentinel/Orion-sentinel-ha-dns.git orion-dns-ha
+sudo git clone https://github.com/orionsentinel/Orion-DNS_Stack.git orion-dns-ha
 sudo chown -R $USER:$USER orion-dns-ha
 cd orion-dns-ha
 ```
@@ -247,7 +247,7 @@ exit
 
 ```bash
 cd /opt
-sudo git clone https://github.com/orionsentinel/Orion-sentinel-ha-dns.git orion-dns-ha
+sudo git clone https://github.com/orionsentinel/Orion-DNS_Stack.git orion-dns-ha
 sudo chown -R $USER:$USER orion-dns-ha
 cd orion-dns-ha
 ```
@@ -346,7 +346,7 @@ exit  # Log out and back in
 
 ```bash
 cd /opt
-sudo git clone https://github.com/orionsentinel/Orion-sentinel-ha-dns.git orion-dns-ha
+sudo git clone https://github.com/orionsentinel/Orion-DNS_Stack.git orion-dns-ha
 sudo chown -R $USER:$USER orion-dns-ha
 cd orion-dns-ha
 ```
@@ -795,7 +795,7 @@ After successful installation:
 
 ## Additional Resources
 
-- **GitHub Repository**: https://github.com/orionsentinel/Orion-sentinel-ha-dns
+- **GitHub Repository**: https://github.com/orionsentinel/Orion-DNS_Stack
 - **Pi-hole Documentation**: https://docs.pi-hole.net/
 - **Unbound Documentation**: https://www.nlnetlabs.nl/documentation/unbound/
 - **Keepalived Documentation**: https://keepalived.readthedocs.io/
@@ -807,7 +807,7 @@ After successful installation:
 If you encounter issues not covered in this guide:
 
 1. Check the [README.md](README.md) troubleshooting section
-2. Review GitHub Issues: https://github.com/orionsentinel/Orion-sentinel-ha-dns/issues
+2. Review GitHub Issues: https://github.com/orionsentinel/Orion-DNS_Stack/issues
 3. Open a new issue with:
    - Your setup (single/two-node)
    - Output of `docker ps`, `docker logs`, and relevant config files

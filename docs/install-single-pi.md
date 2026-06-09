@@ -22,8 +22,8 @@ A single-Pi deployment provides:
 ## Quick Start
 
 ```bash
-git clone https://github.com/orionsentinel/Orion-sentinel-ha-dns.git
-cd Orion-sentinel-ha-dns
+git clone https://github.com/orionsentinel/Orion-DNS_Stack.git
+cd Orion-DNS_Stack
 bash install.sh
 ```
 
@@ -51,8 +51,8 @@ Then open `http://<your-pi-ip>:5555` and select **Single-Node** mode in the wiza
 
 1. Clone and run installer:
    ```bash
-   git clone https://github.com/orionsentinel/Orion-sentinel-ha-dns.git
-   cd Orion-sentinel-ha-dns
+   git clone https://github.com/orionsentinel/Orion-DNS_Stack.git
+   cd Orion-DNS_Stack
    bash install.sh
    ```
 
@@ -66,8 +66,8 @@ Then open `http://<your-pi-ip>:5555` and select **Single-Node** mode in the wiza
 
 1. Clone repository:
    ```bash
-   git clone https://github.com/orionsentinel/Orion-sentinel-ha-dns.git
-   cd Orion-sentinel-ha-dns
+   git clone https://github.com/orionsentinel/Orion-DNS_Stack.git
+   cd Orion-DNS_Stack
    ```
 
 2. Configure environment:

@@ -53,7 +53,7 @@ http://<your-pi-ip>:8080
 If you need to start the wizard manually:
 
 ```bash
-cd /path/to/Orion-sentinel-ha-dns
+cd /path/to/Orion-DNS_Stack
 
 # Start just the wizard service
 docker compose -f stacks/dns/docker-compose.yml up -d dns-wizard
@@ -180,7 +180,7 @@ Once the wizard completes:
 The wizard saves configuration but doesn't start services. Deploy them:
 
 ```bash
-cd /path/to/Orion-sentinel-ha-dns
+cd /path/to/Orion-DNS_Stack
 
 # Start all DNS services
 docker compose -f stacks/dns/docker-compose.yml up -d
@@ -447,5 +447,5 @@ wizard/
 **Need Help?**
 
 - Check the [Troubleshooting Guide](../TROUBLESHOOTING.md)
-- Visit the [GitHub repository](https://github.com/orionsentinel/Orion-sentinel-ha-dns)
+- Visit the [GitHub repository](https://github.com/orionsentinel/Orion-DNS_Stack)
 - Review the [README](../README.md) for additional resources
