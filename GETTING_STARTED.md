@@ -8,8 +8,8 @@ A quick guide to get your high-availability DNS stack up and running.
 
 ```bash
 # Clone and install
-git clone https://github.com/orionsentinel/Orion-sentinel-ha-dns.git
-cd Orion-sentinel-ha-dns
+git clone https://github.com/orionsentinel/Orion-DNS_Stack.git
+cd Orion-DNS_Stack
 bash install.sh
 ```
 
@@ -148,7 +148,7 @@ dig @<your-ip> google.com
 ## Get Help
 
 - 📚 [Full documentation](README.md)
-- 🐛 [GitHub Issues](https://github.com/orionsentinel/Orion-sentinel-ha-dns/issues)
+- 🐛 [GitHub Issues](https://github.com/orionsentinel/Orion-DNS_Stack/issues)
 
 ---
 

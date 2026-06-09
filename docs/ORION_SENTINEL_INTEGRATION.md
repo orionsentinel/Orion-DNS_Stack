@@ -697,7 +697,7 @@ When integrating DNS Pi (#1) with Security Pi (#2), security is paramount. Follo
 
 ```bash
 # On DNS Pi (Pi #1)
-cd /path/to/Orion-sentinel-ha-dns
+cd /path/to/Orion-DNS_Stack
 
 # Add to .env file
 echo "PIHOLE_API_TOKEN=<your-api-token-here>" >> .env
@@ -990,7 +990,7 @@ groups:
 
 ## Resources
 
-- **This Repo:** [Orion Sentinel DNS HA](https://github.com/orionsentinel/Orion-sentinel-ha-dns)
+- **This Repo:** [Orion Sentinel DNS HA](https://github.com/orionsentinel/Orion-DNS_Stack)
 - **NSM/AI Repo:** Create `orion-sentinel-nsm-ai` repository
 - **Pi-hole API Docs:** https://docs.pi-hole.net/
 - **Loki Docs:** https://grafana.com/docs/loki/

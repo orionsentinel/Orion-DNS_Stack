@@ -115,9 +115,9 @@ sudo apt install -y docker-compose-plugin
 
 # Clone repository
 cd /opt
-sudo git clone https://github.com/your-org/Orion-sentinel-ha-dns.git
-sudo chown -R $USER:$USER Orion-sentinel-ha-dns
-cd Orion-sentinel-ha-dns/deployments/Production_2Pi_HA
+sudo git clone https://github.com/your-org/Orion-DNS_Stack.git
+sudo chown -R $USER:$USER Orion-DNS_Stack
+cd Orion-DNS_Stack/deployments/Production_2Pi_HA
 
 # Logout and login for Docker group to take effect
 ```
@@ -142,7 +142,7 @@ ssh pi@192.168.8.12 "echo 'SSH connection successful'"
 #### On Pi #1 (Primary):
 
 ```bash
-cd /opt/Orion-sentinel-ha-dns/deployments/Production_2Pi_HA/node1
+cd /opt/Orion-DNS_Stack/deployments/Production_2Pi_HA/node1
 cp .env.example .env
 
 # Generate secure passwords
@@ -169,7 +169,7 @@ VRRP_PASSWORD=<your-vrrp-password>
 #### On Pi #2 (Secondary):
 
 ```bash
-cd /opt/Orion-sentinel-ha-dns/deployments/Production_2Pi_HA/node2
+cd /opt/Orion-DNS_Stack/deployments/Production_2Pi_HA/node2
 cp .env.example .env
 nano .env
 ```
@@ -189,7 +189,7 @@ VRRP_PASSWORD=<same-as-pi1>
 #### On Pi #1 (deploy first):
 
 ```bash
-cd /opt/Orion-sentinel-ha-dns/deployments/Production_2Pi_HA/node1
+cd /opt/Orion-DNS_Stack/deployments/Production_2Pi_HA/node1
 docker compose up -d
 
 # Watch logs
@@ -199,7 +199,7 @@ docker compose logs -f
 #### On Pi #2 (deploy second):
 
 ```bash
-cd /opt/Orion-sentinel-ha-dns/deployments/Production_2Pi_HA/node2
+cd /opt/Orion-DNS_Stack/deployments/Production_2Pi_HA/node2
 docker compose up -d
 
 # Watch logs
@@ -278,7 +278,7 @@ docker start keepalived
 
 ```bash
 # Simulate Pi #1 failure by stopping all containers
-cd /opt/Orion-sentinel-ha-dns/deployments/Production_2Pi_HA/node1
+cd /opt/Orion-DNS_Stack/deployments/Production_2Pi_HA/node1
 docker compose down
 
 # VIP should move to Pi #2 within 5 seconds
@@ -326,14 +326,14 @@ docker logs self-healing
 ```bash
 # Update Pi #2 first (BACKUP)
 ssh pi@192.168.8.12
-cd /opt/Orion-sentinel-ha-dns/deployments/Production_2Pi_HA/node2
+cd /opt/Orion-DNS_Stack/deployments/Production_2Pi_HA/node2
 docker compose pull
 docker compose up -d
 # Wait for services to stabilize (2 minutes)
 
 # Update Pi #1 (MASTER)
 # VIP will briefly move to Pi #2 during restart
-cd /opt/Orion-sentinel-ha-dns/deployments/Production_2Pi_HA/node1
+cd /opt/Orion-DNS_Stack/deployments/Production_2Pi_HA/node1
 docker compose pull
 docker compose up -d
 # VIP returns after ~30 seconds

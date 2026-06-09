@@ -9,94 +9,70 @@ on:
 permissions:
   contents: read
 
+# Canonical CI test environment (matches docs/networking.md):
+#   Node A 192.168.8.244 | Node B 192.168.8.245 | VIP 192.168.8.243
+env:
+  CI_ENV: |
+    NODE_IP=192.168.8.244
+    NODE_ROLE=MASTER
+    HOSTNAME=pi-dns-1
+    DOMAIN_NAME=lan
+    TZ=UTC
+    WEBPASSWORD=ci_test_password
+    FTLCONF_webserver_api_password=ci_test_password
+    FTLCONF_dns_upstreams=127.0.0.1#5335
+    FTLCONF_dns_dnssec=true
+    FTLCONF_local_ipv4=192.168.8.244
+    DNSMASQ_LISTENING=all
+    REV_SERVER=true
+    REV_SERVER_TARGET=192.168.8.1
+    REV_SERVER_DOMAIN=lan
+    REV_SERVER_CIDR=192.168.8.0/24
+    VIP_ADDRESS=192.168.8.243
+    VIP_NETMASK=32
+    NETWORK_INTERFACE=eth0
+    KEEPALIVED_PRIORITY=200
+    VIRTUAL_ROUTER_ID=51
+    ROUTER_ID=orion-dns-ha
+    VRRP_PASSWORD=ci_test8c
+    USE_UNICAST_VRRP=true
+    PEER_IP=192.168.8.245
+    UNICAST_SRC_IP=192.168.8.244
+    LOKI_URL=http://192.168.8.245:3100/loki/api/v1/push
+
 jobs:
-  docker-compose-validation:
-    name: Validate Docker Compose Files
+  compose-validation:
+    name: Validate compose config
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Create test .env file
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Write CI env file
+        run: printf '%s\n' "$CI_ENV" > .env
+      - name: Validate canonical compose.yml (all profiles)
         run: |
-          cat > .env <<EOF
-          NODE_IP=192.168.8.249
-          NODE_ROLE=MASTER
-          VIP_ADDRESS=192.168.8.250
-          VIP_NETMASK=24
-          NETWORK_INTERFACE=eth0
-          SUBNET=192.168.8.0/24
-          GATEWAY=192.168.8.1
-          TZ=UTC
-          HOSTNAME=orion-dns-primary
-          DOMAIN_NAME=lan
-          WEBPASSWORD=test_password
-          FTLCONF_webserver_api_password=test_password
-          FTLCONF_dns_upstreams=127.0.0.1#5335
-          FTLCONF_dns_dnssec=true
-          FTLCONF_local_ipv4=192.168.8.249
-          DNSMASQ_LISTENING=all
-          REV_SERVER=true
-          REV_SERVER_TARGET=192.168.8.1
-          REV_SERVER_DOMAIN=lan
-          REV_SERVER_CIDR=192.168.8.0/24
-          KEEPALIVED_PRIORITY=200
-          VIRTUAL_ROUTER_ID=51
-          ROUTER_ID=orion-dns-ha
-          VRRP_PASSWORD=test_vrrp
-          USE_UNICAST_VRRP=true
-          PEER_IP=192.168.8.243
-          UNICAST_SRC_IP=192.168.8.249
-          LOKI_URL=http://192.168.8.100:3100
-          REPO_DIR=/opt/orion-dns-ha
-          PIHOLE_CONTAINER_NAME=pihole_unbound
-          KEEPALIVED_CONTAINER_NAME=keepalived
-          BACKUP_RETENTION_DAYS=7
-          EOF
-
-      - name: Validate main compose.yml
-        run: docker compose -f compose.yml config > /dev/null
-
-      - name: Validate all stack compose files
-        run: |
-          # Skip validation of old stacks since we're simplifying the structure
-          echo "Skipping stack validation - simplified structure uses single compose.yml"
-
-      - name: Validate wizard compose file
-        run: |
-          # Skip wizard validation - focusing on simplified structure
-          echo "Skipping wizard validation - using simplified deployment"
+          docker compose -f compose.yml config -q
+          for p in single-node two-node-ha-primary two-node-ha-backup exporters netsec; do
+            echo "--- profile: $p ---"
+            docker compose --profile "$p" config --services
+          done
 
   yaml-lint:
-    name: YAML Linting
+    name: YAML lint
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Install yamllint
-        run: pip install yamllint
-
-      - name: Create yamllint config
+      - uses: actions/checkout@v4
+      - run: pip install yamllint
+      - name: Write yamllint config
         run: |
-          cat > .yamllint.yml <<EOF
+          cat > .yamllint.yml <<'EOF'
           extends: default
           rules:
-            line-length:
-              max: 160
-              level: warning
+            line-length: {max: 200, level: warning}
             document-start: disable
-            comments:
-              min-spaces-from-content: 1
-              level: warning
-            indentation:
-              spaces: 2
-              indent-sequences: true
-            truthy:
-              allowed-values: ['true', 'false', 'on', 'off']
+            comments: {min-spaces-from-content: 1, level: warning}
+            indentation: {spaces: 2, indent-sequences: true}
+            truthy: {allowed-values: ['true', 'false', 'on', 'off']}
             trailing-spaces: disable
             comments-indentation: disable
           ignore: |
@@ -104,98 +80,79 @@ jobs:
             node_modules/
             venv/
           EOF
-
-      - name: Run yamllint
+      - name: Run yamllint (advisory)
         run: yamllint -c .yamllint.yml . || true
 
   shellcheck:
-    name: Shell Script Linting
+    name: Shell lint
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Install shellcheck
-        run: sudo apt-get update && sudo apt-get install -y shellcheck
-
-      - name: Run shellcheck on all scripts
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y shellcheck
+      - name: Run shellcheck (advisory until scripts/ is deduped)
         run: |
-          echo "Checking keepalived scripts..."
-          find keepalived -name "*.sh" -type f -exec shellcheck --severity=error {} + || true
-          echo "Checking ops scripts..."
-          find ops -name "*.sh" -type f -exec shellcheck --severity=error {} + || true
-          echo "Checking other scripts..."
-          find scripts -name "*.sh" -type f -exec shellcheck --severity=error {} + 2>/dev/null || true
+          mapfile -t scripts < <(find . -path ./.git -prune -o -name '*.sh' -type f -print)
+          echo "Linting ${#scripts[@]} shell scripts"
+          shellcheck --severity=error "${scripts[@]}" || true
 
-  smoke-test:
-    name: Smoke Test - Stack Validation
+  hadolint:
+    name: Dockerfile lint
     runs-on: ubuntu-latest
-    needs: [docker-compose-validation, yaml-lint]
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Create dummy .env file
+      - uses: actions/checkout@v4
+      - name: Run hadolint on all Dockerfiles (advisory)
         run: |
-          cat > .env <<EOF
-          # Dummy configuration for CI testing
-          NODE_IP=192.168.8.249
-          NODE_ROLE=MASTER
-          VIP_ADDRESS=192.168.8.250
-          VIP_NETMASK=24
-          NETWORK_INTERFACE=eth0
-          SUBNET=192.168.8.0/24
-          GATEWAY=192.168.8.1
-          TZ=UTC
-          HOSTNAME=orion-dns-primary
-          DOMAIN_NAME=lan
-          WEBPASSWORD=test_password_ci_only
-          FTLCONF_webserver_api_password=test_password_ci_only
-          FTLCONF_dns_upstreams=127.0.0.1#5335
-          FTLCONF_dns_dnssec=true
-          FTLCONF_local_ipv4=192.168.8.249
-          DNSMASQ_LISTENING=all
-          KEEPALIVED_PRIORITY=200
-          VIRTUAL_ROUTER_ID=51
-          ROUTER_ID=orion-dns-ha
-          VRRP_PASSWORD=test_vrrp_ci
-          USE_UNICAST_VRRP=true
-          PEER_IP=192.168.8.243
-          UNICAST_SRC_IP=192.168.8.249
-          LOKI_URL=http://192.168.8.100:3100
-          EOF
+          for df in $(find . -path ./.git -prune -o -name 'Dockerfile*' -type f -print); do
+            echo "=== $df ==="
+            docker run --rm -i hadolint/hadolint < "$df" || true
+          done
 
-      - name: Verify compose configuration
+  arm64-build:
+    name: ARM64 build check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - name: Build keepalived image for linux/arm64
         run: |
-          echo "=== Validating compose configuration ==="
-          docker compose config --quiet
-          echo "✓ Compose configuration is valid"
+          docker buildx build --platform linux/arm64 ./keepalived \
+            --tag orion-keepalived:arm64-ci --load
+      - name: Confirm canonical DNS image is multi-arch (arm64)
+        run: |
+          docker buildx imagetools inspect \
+            ghcr.io/mpgirro/docker-pihole-unbound:2025.03.0 | grep -i 'linux/arm64' \
+            && echo "✓ pihole-unbound publishes linux/arm64" \
+            || (echo "✗ canonical DNS image missing arm64 manifest" && exit 1)
 
-      - name: Pull container images
+  trivy-scan:
+    name: Security scan (Trivy)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Trivy filesystem + secret + misconfig scan (advisory)
         run: |
-          echo "=== Pulling container images ==="
-          docker compose pull --ignore-pull-failures pihole_unbound || true
-          echo "✓ Image pull attempted"
+          docker run --rm -v "$PWD:/repo" aquasec/trivy:latest fs \
+            --scanners vuln,secret,misconfig \
+            --severity CRITICAL,HIGH \
+            --no-progress --exit-code 0 /repo
 
-      - name: Build custom images
+  docs-check:
+    name: Documentation validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Required docs present
         run: |
-          echo "=== Building custom images ==="
-          docker compose build keepalived || echo "⚠️  Keepalived build may need runtime env vars"
-          echo "✓ Build step completed"
-
-      - name: Verify services can be created (dry run)
+          required="README.md docs/AUDIT.md docs/networking.md docs/architecture.md docs/troubleshooting.md docs/disaster-recovery.md"
+          missing=0
+          for f in $required; do
+            if [ -f "$f" ]; then echo "✓ $f"; else echo "✗ missing $f"; missing=1; fi
+          done
+          exit $missing
+      - name: No stale clone URL in docs
         run: |
-          echo "=== Verifying service definitions ==="
-          docker compose --profile single-node config --services
-          docker compose --profile two-node-ha-primary config --services
-          docker compose --profile exporters config --services
-          echo "✓ All services are properly defined"
-
-      - name: Cleanup
-        if: always()
-        run: |
-          docker compose --profile single-node --profile two-node-ha-primary --profile two-node-ha-backup --profile exporters down -v 2>/dev/null || true
-          docker system prune -af --volumes 2>/dev/null || true
+          if grep -rIn "Orion-sentinel-ha-dns" --include='*.md' .; then
+            echo "✗ stale clone URL found"; exit 1
+          fi
+          echo "✓ no stale clone URLs"

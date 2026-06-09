@@ -955,7 +955,7 @@ cat install.log
 ### 3. Search Existing Issues
 
 Check if your problem is already reported:
-https://github.com/orionsentinel/Orion-sentinel-ha-dns/issues
+https://github.com/orionsentinel/Orion-DNS_Stack/issues
 
 ### 4. Create a New Issue
 

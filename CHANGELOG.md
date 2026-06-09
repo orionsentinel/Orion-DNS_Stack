@@ -90,7 +90,7 @@ Existing deployments continue to work, but to benefit from improvements:
 
 3. **Recreate keepalived containers**:
    ```bash
-   cd /opt/orion-dns-ha/Orion-sentinel-ha-dns
+   cd /opt/orion-dns-ha/Orion-DNS_Stack
    docker compose --profile two-node-ha-primary up -d --build --force-recreate keepalived
    ```
 

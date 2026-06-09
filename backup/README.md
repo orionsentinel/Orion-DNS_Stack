@@ -65,14 +65,14 @@ sudo crontab -e
 
 Add this line for weekly backups every Sunday at 2 AM:
 ```
-0 2 * * 0 /path/to/Orion-sentinel-ha-dns/backup/backup-volumes.sh /srv/backups/orion
+0 2 * * 0 /path/to/Orion-DNS_Stack/backup/backup-volumes.sh /srv/backups/orion
 ```
 
 ### Daily Backups
 
 For daily backups at 2 AM:
 ```
-0 2 * * * /path/to/Orion-sentinel-ha-dns/backup/backup-volumes.sh /srv/backups/orion
+0 2 * * * /path/to/Orion-DNS_Stack/backup/backup-volumes.sh /srv/backups/orion
 ```
 
 ## Backup Retention
@@ -134,8 +134,8 @@ make health
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/orionsentinel/Orion-sentinel-ha-dns.git
-cd Orion-sentinel-ha-dns
+git clone https://github.com/orionsentinel/Orion-DNS_Stack.git
+cd Orion-DNS_Stack
 
 # 2. Restore configuration
 sudo ./backup/restore-volume.sh /path/to/backup.tar.gz

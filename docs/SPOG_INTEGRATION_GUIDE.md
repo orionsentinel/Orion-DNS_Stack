@@ -286,7 +286,7 @@ sudo ufw status
 ### Step 1: Deploy Promtail Agent
 
 ```bash
-cd /path/to/Orion-sentinel-ha-dns/stacks/agents/pi-dns
+cd /path/to/Orion-DNS_Stack/stacks/agents/pi-dns
 
 # Copy example config
 cp promtail-config.example.yml promtail-config.yml
@@ -318,7 +318,7 @@ docker logs pi-dns-agent
 ### Step 2: Deploy Node Exporter (for metrics)
 
 ```bash
-cd /path/to/Orion-sentinel-ha-dns/stacks/monitoring
+cd /path/to/Orion-DNS_Stack/stacks/monitoring
 
 # If not already running, start Node Exporter
 docker compose -f docker-compose.exporters.yml up -d node-exporter
@@ -366,7 +366,7 @@ Should return log entries from Pi DNS.
 # On NetSec Pi
 cd /path/to/Orion-sentinel-netsec-ai/agents/pi-netsec
 # OR if using configs from DNS repo:
-cd /path/to/Orion-sentinel-ha-dns/stacks/agents/pi-netsec
+cd /path/to/Orion-DNS_Stack/stacks/agents/pi-netsec
 
 # Copy example config
 cp promtail-config.example.yml promtail-config.yml

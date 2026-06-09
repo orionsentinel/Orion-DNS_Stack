@@ -29,7 +29,7 @@ This guide covers routine operations, maintenance procedures, and best practices
 
 **Quick Backup:**
 ```bash
-cd /path/to/Orion-sentinel-ha-dns
+cd /path/to/Orion-DNS_Stack
 bash scripts/backup-config.sh
 ```
 
@@ -57,7 +57,7 @@ Add to crontab for automatic weekly backups:
 crontab -e
 
 # Add this line for weekly backups (Sundays at 2 AM)
-0 2 * * 0 /path/to/Orion-sentinel-ha-dns/scripts/backup-config.sh >> /var/log/dns-backup.log 2>&1
+0 2 * * 0 /path/to/Orion-DNS_Stack/scripts/backup-config.sh >> /var/log/dns-backup.log 2>&1
 ```
 
 **Custom Backup Location:**
@@ -75,7 +75,7 @@ BACKUP_DIR=/mnt/external/backups bash scripts/backup-config.sh
 The `upgrade.sh` script provides a safe, automated upgrade process:
 
 ```bash
-cd /path/to/Orion-sentinel-ha-dns
+cd /path/to/Orion-DNS_Stack
 bash scripts/upgrade.sh
 ```
 
@@ -168,7 +168,7 @@ Restore from backup when:
 
 **Basic Restore:**
 ```bash
-cd /path/to/Orion-sentinel-ha-dns
+cd /path/to/Orion-DNS_Stack
 bash scripts/restore-config.sh backups/dns-ha-backup-YYYYMMDD_HHMMSS.tar.gz
 ```
 
@@ -208,8 +208,8 @@ When migrating to a new Pi:
 2. **On New System:**
    ```bash
    # Clone repository
-   git clone https://github.com/orionsentinel/Orion-sentinel-ha-dns.git
-   cd Orion-sentinel-ha-dns
+   git clone https://github.com/orionsentinel/Orion-DNS_Stack.git
+   cd Orion-DNS_Stack
    
    # Copy backup file to backups/ directory
    # Then restore
@@ -419,7 +419,7 @@ du -h stacks/dns/pihole*/etc-pihole/
 See comprehensive troubleshooting guide:
 - [TROUBLESHOOTING.md](../TROUBLESHOOTING.md)
 - [DISASTER_RECOVERY.md](../DISASTER_RECOVERY.md)
-- GitHub Issues: https://github.com/orionsentinel/Orion-sentinel-ha-dns/issues
+- GitHub Issues: https://github.com/orionsentinel/Orion-DNS_Stack/issues
 
 ---
 

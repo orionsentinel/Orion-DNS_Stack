@@ -55,7 +55,7 @@ This agent is part of the **Single Pane of Glass (SPoG)** architecture:
 Use the provided deployment script for easy setup:
 
 ```bash
-cd /path/to/Orion-sentinel-ha-dns
+cd /path/to/Orion-DNS_Stack
 ./scripts/deploy-spog-agent.sh pi-dns 192.168.8.100
 ```
 
@@ -77,7 +77,7 @@ If you prefer manual configuration:
 Copy the example configuration and update the Dell CoreSrv IP:
 
 ```bash
-cd /path/to/Orion-sentinel-ha-dns/stacks/agents/pi-dns
+cd /path/to/Orion-DNS_Stack/stacks/agents/pi-dns
 cp promtail-config.example.yml promtail-config.yml
 ```
 
@@ -101,7 +101,7 @@ export LOKI_URL=http://192.168.8.100:3100
 Or add it to your `.env` file in the repository root:
 
 ```bash
-echo "LOKI_URL=http://192.168.8.100:3100" >> /path/to/Orion-sentinel-ha-dns/.env
+echo "LOKI_URL=http://192.168.8.100:3100" >> /path/to/Orion-DNS_Stack/.env
 ```
 
 #### 3. Deploy the Agent

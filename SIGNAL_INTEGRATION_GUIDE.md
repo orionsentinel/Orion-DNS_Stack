@@ -220,4 +220,4 @@ For full API documentation, visit:
 
 For issues or questions:
 - signal-cli-rest-api: https://github.com/bbernhard/signal-cli-rest-api/issues
-- This repository: https://github.com/orionsentinel/Orion-sentinel-ha-dns/issues
+- This repository: https://github.com/orionsentinel/Orion-DNS_Stack/issues

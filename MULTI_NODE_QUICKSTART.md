@@ -64,12 +64,12 @@ sudo usermod -aG docker $USER
 # Install Docker Compose plugin
 sudo apt-get install -y docker-compose-plugin
 
-# Clone repository to /opt/Orion-sentinel-ha-dns
+# Clone repository to /opt/Orion-DNS_Stack
 sudo mkdir -p /opt
 cd /opt
-sudo git clone https://github.com/orionsentinel/Orion-sentinel-ha-dns.git
-sudo chown -R $USER:$USER Orion-sentinel-ha-dns
-cd Orion-sentinel-ha-dns
+sudo git clone https://github.com/orionsentinel/Orion-DNS_Stack.git
+sudo chown -R $USER:$USER Orion-DNS_Stack
+cd Orion-DNS_Stack
 ```
 
 **Verify static IPs** are set on your router:
@@ -84,7 +84,7 @@ cd Orion-sentinel-ha-dns
 On **Pi1** only:
 
 ```bash
-cd /opt/Orion-sentinel-ha-dns
+cd /opt/Orion-DNS_Stack
 
 # Copy example .env
 cp .env.multinode.example .env
@@ -133,7 +133,7 @@ Save and exit (Ctrl+X, Y, Enter).
 On **Pi2** only:
 
 ```bash
-cd /opt/Orion-sentinel-ha-dns
+cd /opt/Orion-DNS_Stack
 
 # Copy example .env
 cp .env.multinode.example .env
@@ -181,7 +181,7 @@ Save and exit (Ctrl+X, Y, Enter).
 On **Pi1** (deploy primary services):
 
 ```bash
-cd /opt/Orion-sentinel-ha-dns/stacks/dns
+cd /opt/Orion-DNS_Stack/stacks/dns
 
 # Deploy with two-pi-ha-pi1 profile
 docker compose --profile two-pi-ha-pi1 up -d
@@ -193,7 +193,7 @@ docker compose ps
 On **Pi2** (deploy secondary services):
 
 ```bash
-cd /opt/Orion-sentinel-ha-dns/stacks/dns
+cd /opt/Orion-DNS_Stack/stacks/dns
 
 # Deploy with two-pi-ha-pi2 profile
 docker compose --profile two-pi-ha-pi2 up -d
@@ -213,7 +213,7 @@ docker compose ps
 Run the automated verification script on **both** nodes:
 
 ```bash
-cd /opt/Orion-sentinel-ha-dns
+cd /opt/Orion-DNS_Stack
 ./scripts/verify-ha.sh
 ```
 
@@ -277,7 +277,7 @@ nslookup google.com 192.168.8.249
 
 On **either Pi**:
 ```bash
-cd /opt/Orion-sentinel-ha-dns
+cd /opt/Orion-DNS_Stack
 bash scripts/orion-dns-ha-health.sh
 
 # Expected output:
@@ -409,7 +409,7 @@ docker compose --profile two-pi-ha-pi2 up -d
 
 Run on **either Pi**:
 ```bash
-cd /opt/Orion-sentinel-ha-dns
+cd /opt/Orion-DNS_Stack
 bash scripts/orion-dns-ha-health.sh
 ```
 
@@ -435,7 +435,7 @@ docker logs -f keepalived
 
 On **both Pis** (one at a time!):
 ```bash
-cd /opt/Orion-sentinel-ha-dns
+cd /opt/Orion-DNS_Stack
 git pull
 docker compose pull
 docker compose --profile two-pi-ha-pi1 up -d  # On Pi1

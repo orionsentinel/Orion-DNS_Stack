@@ -40,8 +40,8 @@ This guide provides clear, step-by-step instructions to install the Orion Sentin
 Before installing, you can run a validation script to check prerequisites:
 
 ```bash
-git clone https://github.com/orionsentinel/Orion-sentinel-ha-dns.git
-cd Orion-sentinel-ha-dns
+git clone https://github.com/orionsentinel/Orion-DNS_Stack.git
+cd Orion-DNS_Stack
 bash scripts/validate-installation.sh
 ```
 
@@ -64,8 +64,8 @@ This method uses a web-based wizard for easy, guided setup. **Perfect for beginn
 SSH into your Raspberry Pi and run:
 
 ```bash
-git clone https://github.com/orionsentinel/Orion-sentinel-ha-dns.git
-cd Orion-sentinel-ha-dns
+git clone https://github.com/orionsentinel/Orion-DNS_Stack.git
+cd Orion-DNS_Stack
 bash install.sh
 ```
 
@@ -108,8 +108,8 @@ This method is for users who prefer terminal-based installation or need more con
 #### Step 1: Clone the Repository
 
 ```bash
-git clone https://github.com/orionsentinel/Orion-sentinel-ha-dns.git
-cd Orion-sentinel-ha-dns
+git clone https://github.com/orionsentinel/Orion-DNS_Stack.git
+cd Orion-DNS_Stack
 ```
 
 #### Step 2: Configure Environment
@@ -338,7 +338,7 @@ bash scripts/backup-config.sh
 
 # Add to crontab for weekly backups
 crontab -e
-# Add: 0 2 * * 0 /home/pi/Orion-sentinel-ha-dns/scripts/backup-config.sh
+# Add: 0 2 * * 0 /home/pi/Orion-DNS_Stack/scripts/backup-config.sh
 ```
 
 ### Configure Notifications (Optional)
@@ -356,7 +356,7 @@ Keep your system updated:
 
 ```bash
 # Update the stack
-cd Orion-sentinel-ha-dns
+cd Orion-DNS_Stack
 bash scripts/smart-upgrade.sh -i
 
 # Update Pi-hole gravity (blocklists)
@@ -394,7 +394,7 @@ openssl rand -base64 32
 ## Getting Help
 
 - **Documentation**: Check the `/docs` directory in this repository
-- **Issues**: [GitHub Issues](https://github.com/orionsentinel/Orion-sentinel-ha-dns/issues)
+- **Issues**: [GitHub Issues](https://github.com/orionsentinel/Orion-DNS_Stack/issues)
 - **Community**: See README.md for community links
 
 ---

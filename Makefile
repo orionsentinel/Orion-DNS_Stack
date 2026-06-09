@@ -10,7 +10,7 @@
 #   make restart          - Restart all services
 #   make clean            - Remove all containers and volumes (DESTRUCTIVE)
 
-.PHONY: help up-core up-exporters up-all down restart logs logs-follow health-check test backup clean validate-env
+.PHONY: help up-core up-exporters up-all down restart logs logs-follow health-check test backup clean validate-env configure-nic list-nics
 
 # Default target
 .DEFAULT_GOAL := help
@@ -40,6 +40,13 @@ help: ## Show this help message
 	else \
 		echo "  ✗ .env file NOT found - copy .env.primary.example or .env.secondary.example to .env first"; \
 	fi
+
+configure-nic: ## Configure the USB-C/2.5-10G NIC on a fixed IP (reads .env; needs sudo)
+	@echo "$(BOLD)Configuring dedicated NIC from .env...$(NC)"
+	@sudo bash scripts/configure-nic.sh
+
+list-nics: ## List candidate Ethernet interfaces (name / MAC / state / speed)
+	@bash scripts/configure-nic.sh --list
 
 validate-env: ## Validate environment configuration
 	@echo "$(BOLD)Validating environment configuration...$(NC)"
