@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - Fix the ad problem (privacy hardening) 🛡️
+
+- `scripts/block-private-relay.sh` (`make block-private-relay`): blocks iCloud
+  Private Relay ingress domains so iPhones stop routing DNS around Pi-hole — the
+  #1 fix for "ads still showing on iPhone". Idempotent, backs up gravity.db, `--remove`.
+- `scripts/setup-blocklists.sh`: default (balanced) is now **Hagezi Multi PRO + TIF**
+  (hosts-format, Pi-hole-correct); fixed the container default (`pihole_unbound`).
+- `docs/privacy-setup.md`: the final recommendation + fix order, copy-paste ready.
+  Private Relay block added to `client-network-setup.md`.
+- Docs now assume **NVMe SSD (HAT)** boot, not SD cards.
+
 ### Removed - Radical simplification (minimum viable privacy stack) 🪓
 
 Trimmed the repo to exactly what serves the core goal — block ads/trackers/telemetry

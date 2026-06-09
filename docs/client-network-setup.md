@@ -54,12 +54,21 @@ blocking anything" on phones.
 
 Browsers and iOS/Android can use their own DoH/DoT and skip your DNS entirely.
 
+**iCloud Private Relay is the big one** (it's why ads still show on iPhones). Block
+its ingress domains so Safari falls back to your DNS — one command:
+
+```bash
+./scripts/block-private-relay.sh && ./scripts/pihole-sync.sh
+```
+
+Then on each iPhone, Private Relay shows "unavailable on this network" (expected),
+and turn off Wi-Fi → (i) → "Limit IP Address Tracking". See `privacy-setup.md`.
+
+Other DoH bypass:
 - Pi-hole already blocks the Firefox canary (`use-application-dns.net`), nudging
   it off DoH.
 - Block known public DoH endpoints at the router/Pi-hole (there are maintained
   blocklists for this).
-- Better long-term: run your **own** DoH/DoT endpoint (the optional `blocky`
-  gateway) so devices use *encrypted* DNS that still points at your Pi-hole.
 
 Verify a device is actually filtered:
 
@@ -84,6 +93,5 @@ differs.
 ## 8. Smart-home / IoT note
 
 Your Tapo cameras and other IoT devices phone home constantly. Once they resolve
-through the VIP you can see (and block) that traffic in Pi-hole's query log and
-the Pi-hole query log — a good first step toward containing them (see the IoT
-containment idea in `REVIEW.md`/roadmap).
+through the VIP you can see (and block) that traffic in Pi-hole's query log — a good first step toward containing them (see
+docs/iot-containment.md).

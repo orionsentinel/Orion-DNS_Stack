@@ -9,7 +9,7 @@
 #   make restart          - Restart all services
 #   make clean            - Remove all containers and volumes (DESTRUCTIVE)
 
-.PHONY: help up-core down restart logs logs-follow health-check test backup clean validate-env configure-nic list-nics selfcheck test-failover
+.PHONY: help up-core down restart logs logs-follow health-check test backup clean validate-env configure-nic list-nics selfcheck test-failover block-private-relay setup-blocklists
 
 # Default target
 .DEFAULT_GOAL := help
@@ -114,6 +114,12 @@ selfcheck: ## Validate configuration files
 
 test-failover: ## Integration test: force VRRP failover and verify recovery (disruptive)
 	@bash scripts/test-failover.sh
+
+block-private-relay: ## Block iCloud Private Relay (highest-ROI iPhone ad fix; run on primary)
+	@bash scripts/block-private-relay.sh
+
+setup-blocklists: ## Apply recommended blocklists (Hagezi Multi PRO + TIF; run on primary)
+	@bash scripts/setup-blocklists.sh
 
 bootstrap: ## Create required directories and files
 	@echo "$(BOLD)Bootstrapping directories...$(NC)"

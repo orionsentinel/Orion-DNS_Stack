@@ -76,7 +76,7 @@ the path to **"runs itself"** is mostly *subtraction* plus a few operability bol
    automated **failover integration test** (stop primary → assert VIP moves →
    assert `dig @VIP` resolves).
 10. **Secrets at rest:** consider SOPS+age or Docker/compose secrets so `.env`
-    values aren't plaintext on the SD card.
+    values aren't plaintext on the boot SSD.
 
 ## DevSecOps specifics
 
