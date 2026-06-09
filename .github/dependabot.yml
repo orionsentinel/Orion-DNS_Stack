@@ -10,13 +10,6 @@ updates:
       wizard-deps: {patterns: ["*"]}
     open-pull-requests-limit: 5
 
-  - package-ecosystem: pip
-    directory: /stacks/setup-ui
-    schedule: {interval: weekly}
-    groups:
-      setup-ui-deps: {patterns: ["*"]}
-    open-pull-requests-limit: 5
-
   # --- Container base images (canonical builds) ---
   - package-ecosystem: docker
     directory: /keepalived
