@@ -29,7 +29,6 @@ Single source of truth for Orion Sentinel DNS HA. Start at the repo
 | [OPTIMAL_BLOCKLISTS.md](OPTIMAL_BLOCKLISTS.md) | Recommended blocklists |
 | [PIHOLE_CONFIGURATION.md](PIHOLE_CONFIGURATION.md) | Pi-hole configuration details |
 | [hardening.md](hardening.md) | Security hardening (see also [../SECURITY.md](../SECURITY.md)) |
-| [netsec-node.md](netsec-node.md) | Optional NSM / Suricata node |
 | [iot-containment.md](iot-containment.md) | Contain cameras/IoT: see + block telemetry (opt-in) |
 
 ## Reference
@@ -41,7 +40,6 @@ Single source of truth for Orion Sentinel DNS HA. Start at the repo
 
 ## Operations
 
-- Monitoring & alerting: [../stacks/monitoring/README.md](../stacks/monitoring/README.md)
 - Operational scripts: [../ops/README.md](../ops/README.md)
 - Systemd integration: [../systemd/README.md](../systemd/README.md)
 

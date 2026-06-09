@@ -34,10 +34,10 @@ VIP (Keepalived/VRRP) so DNS survives a node failure or reboot.
   health-checks DNS every 5s (`check_dns.sh`); demotes to BACKUP on failure so the
   peer takes the VIP. Validates its config strictly at start (8-char VRRP_PASSWORD,
   peer IPs) to prevent split-brain.
-- **Exporters** (optional, `exporters` profile) — node-exporter, pihole-exporter,
-  promtail → Loki/Grafana.
-- **NetSec** (optional, `netsec` / `netsec-plus-evebox` profiles) — Suricata IDS,
-  cAdvisor, EveBox. Heavier; intended for a node with an NVMe scratch mount.
+That's the entire stack — three containers. No metrics/observability stack by
+design: Pi-hole's own admin page is the dashboard, and keepalived handles
+failover. (Optionally run a single Uptime-Kuma container elsewhere if you want
+an external "is DNS up?" check — not part of this repo.)
 
 ## Compose profiles
 
@@ -46,8 +46,6 @@ VIP (Keepalived/VRRP) so DNS survives a node failure or reboot.
 | `single-node` | pihole_unbound only | a single Pi (no HA) |
 | `two-node-ha-primary` | pihole_unbound + keepalived (MASTER) | Node A |
 | `two-node-ha-backup` | pihole_unbound + keepalived (BACKUP) | Node B |
-| `exporters` | metrics/log exporters | either node |
-| `netsec[-plus-evebox]` | Suricata + cAdvisor [+ EveBox] | a capable node |
 
 ```bash
 # Node A
@@ -87,9 +85,9 @@ Notes:
 - Tunables (in `.env`): `AUTOHEAL_INTERVAL`, `AUTOHEAL_START_PERIOD`. The probe is
   forgiving (`retries: 5`, `start_period: 90s`) so transient blips don't trigger
   restarts.
-- Degraded states still **page you** via the monitoring stack
-  (`stacks/monitoring/`, alerts → Signal) — self-healing handles recovery,
-  alerting handles the cases it can't.
+- No alerting stack by design (kept simple). If you want an external heads-up,
+  point a single Uptime-Kuma instance (or healthchecks.io) at the VIP — the four
+  layers above handle recovery; that just tells you if everything failed at once.
 
 ## Design choices (trade-offs)
 

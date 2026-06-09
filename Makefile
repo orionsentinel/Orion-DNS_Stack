@@ -3,14 +3,13 @@
 #
 # Usage:
 #   make up-core          - Start core DNS services (pihole + unbound + keepalived)
-#   make up-all           - Start all services including exporters
 #   make down             - Stop all services
 #   make logs             - Show logs from all services
 #   make health-check     - Run comprehensive health check
 #   make restart          - Restart all services
 #   make clean            - Remove all containers and volumes (DESTRUCTIVE)
 
-.PHONY: help up-core up-exporters up-all down restart logs logs-follow health-check test backup clean validate-env configure-nic list-nics selfcheck test-failover
+.PHONY: help up-core down restart logs logs-follow health-check test backup clean validate-env configure-nic list-nics selfcheck test-failover
 
 # Default target
 .DEFAULT_GOAL := help
@@ -82,38 +81,9 @@ up-core: validate-env ## Start core DNS services (pihole + unbound + keepalived)
 		echo "Access Pi-hole admin at: http://$${NODE_IP:-localhost}/admin"; \
 	fi
 
-up-exporters: validate-env ## Start monitoring exporters
-	@echo "$(BOLD)Starting monitoring exporters...$(NC)"
-	docker compose --profile exporters up -d
-	@echo "$(GREEN)✓ Exporters started$(NC)"
-
-up-all: validate-env ## Start all services (core + exporters)
-	@echo "$(BOLD)Starting all services...$(NC)"
-	@if grep -q "NODE_ROLE=MASTER" .env 2>/dev/null || grep -q "NODE_ROLE=BACKUP" .env 2>/dev/null; then \
-		if grep -q "NODE_ROLE=MASTER" .env 2>/dev/null; then \
-			docker compose --profile two-node-ha-primary --profile exporters up -d; \
-		else \
-			docker compose --profile two-node-ha-backup --profile exporters up -d; \
-		fi; \
-	else \
-		docker compose --profile single-node --profile exporters up -d; \
-	fi
-	@echo "$(GREEN)✓ All services started$(NC)"
-	@echo ""
-	@if [ -n "$${VIP_ADDRESS:-}" ]; then \
-		echo "DNS server available at: $${VIP_ADDRESS}"; \
-		echo "Access Pi-hole admin at: http://$${VIP_ADDRESS}/admin"; \
-	else \
-		echo "Access Pi-hole admin at: http://$${NODE_IP:-localhost}/admin"; \
-	fi
-	@echo "Monitoring exporters:"
-	@echo "  - Node exporter: http://$${NODE_IP:-localhost}:9100/metrics"
-	@echo "  - Pi-hole exporter: http://$${NODE_IP:-localhost}:9617/metrics"
-	@echo "  - Promtail: http://$${NODE_IP:-localhost}:9080/ready"
-
 down: ## Stop all services
 	@echo "$(BOLD)Stopping all services...$(NC)"
-	docker compose --profile single-node --profile two-node-ha-primary --profile two-node-ha-backup --profile exporters down
+	docker compose --profile single-node --profile two-node-ha-primary --profile two-node-ha-backup down
 	@echo "$(GREEN)✓ All services stopped$(NC)"
 
 restart: down up-core ## Restart all services
@@ -176,7 +146,7 @@ clean: ## Remove all containers and volumes (DESTRUCTIVE - asks for confirmation
 	@echo "$(RED)$(BOLD)WARNING: This will remove all containers, volumes, and data!$(NC)"
 	@read -p "Are you sure? Type 'yes' to continue: " confirm; \
 	if [ "$$confirm" = "yes" ]; then \
-		docker compose --profile single-node --profile two-node-ha-primary --profile two-node-ha-backup --profile exporters down -v; \
+		docker compose --profile single-node --profile two-node-ha-primary --profile two-node-ha-backup down -v; \
 		echo "$(GREEN)✓ Cleaned up$(NC)"; \
 	else \
 		echo "Cancelled."; \

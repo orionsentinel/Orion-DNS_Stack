@@ -85,5 +85,5 @@ differs.
 
 Your Tapo cameras and other IoT devices phone home constantly. Once they resolve
 through the VIP you can see (and block) that traffic in Pi-hole's query log and
-the Grafana dashboards — a good first step toward containing them (see the IoT
+the Pi-hole query log — a good first step toward containing them (see the IoT
 containment idea in `REVIEW.md`/roadmap).

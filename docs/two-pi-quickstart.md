@@ -26,7 +26,6 @@ Node B `192.168.8.245`, floating VIP `192.168.8.243`, gateway `.1`.
 **Optional extras:**
 - Key-based SSH between the nodes (for Pi-hole config sync).
 - A spare phone number registered with signal-cli (for Signal alerts).
-- A host (can be Node B) with a little spare RAM for the monitoring stack.
 
 ## 1. Prepare both Pis
 
@@ -96,8 +95,8 @@ router + IPv6 details: **[client-network-setup.md](client-network-setup.md)**.
 
 ## 6. Optional add-ons
 
-- **Monitoring + Signal alerts:** run `stacks/monitoring/` on one host and enable
-  `--profile exporters` on each node — see [`../stacks/monitoring/README.md`](../stacks/monitoring/README.md).
+- **"Is DNS up?" (optional):** Pi-hole's admin page is your dashboard. For an
+  external check, run a single Uptime-Kuma container elsewhere pointed at the VIP.
 - **Automated backups + boot persistence:** install the systemd timers — see
   [disaster-recovery.md](disaster-recovery.md) and `../systemd/README.md`.
 - **Pi-hole config sync** (primary → secondary): `scripts/pihole-sync.sh` + timer.
