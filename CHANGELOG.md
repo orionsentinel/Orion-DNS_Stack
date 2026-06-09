@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - IoT containment 📷
+
+- `profiles/iot.yml` + `scripts/setup-iot-containment.sh` + `docs/iot-containment.md`:
+  put cameras/IoT devices in a dedicated Pi-hole group, **see** their phone-home
+  traffic (Grafana/Loki + query log), and block telemetry with a conservative,
+  opt-in, dry-run-by-default, reversible regex set. Tailored to the known Tapo /
+  unknown devices on the LAN.
+
 ### Added - Setup & network docs 📘
 
 - `docs/two-pi-quickstart.md` — full two-Pi setup on one page, with a
