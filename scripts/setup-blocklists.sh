@@ -4,7 +4,7 @@
 
 set -u
 
-CONTAINER="${1:-pihole_primary}"
+CONTAINER="${1:-pihole_unbound}"
 PRESET="${2:-balanced}"
 
 # Colors
@@ -43,13 +43,12 @@ setup_balanced() {
     
     docker exec "$CONTAINER" sqlite3 /etc/pihole/gravity.db \
         "DELETE FROM adlist;
-         INSERT INTO adlist (address, enabled, comment) VALUES 
-         ('https://hosts.oisd.nl/', 1, 'OISD Full - ~1.1M domains'),
-         ('https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/wildcard/pro.txt', 1, 'Hagezi Pro - ~800K domains'),
-         ('https://www.github.developerdan.com/hosts/lists/ads-and-tracking-extended.txt', 1, 'Developer Dan - ~100K domains');"
-    
-    log "Added 3 blocklists"
-    info "Expected total: ~2 million domains"
+         INSERT INTO adlist (address, enabled, comment) VALUES
+         ('https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/hosts/pro.txt', 1, 'Hagezi Multi PRO - ads/trackers/telemetry (recommended)'),
+         ('https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/hosts/tif.txt', 1, 'Hagezi TIF - threat intel (malware/phishing)');"
+
+    log "Added Hagezi Multi PRO + TIF — the recommended pair"
+    info "Two curated lists beat thirty random ones (less overlap, fewer false positives)."
 }
 
 setup_aggressive() {
@@ -59,7 +58,7 @@ setup_aggressive() {
     docker exec "$CONTAINER" sqlite3 /etc/pihole/gravity.db \
         "DELETE FROM adlist;
          INSERT INTO adlist (address, enabled, comment) VALUES 
-         ('https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/wildcard/pro.plus.txt', 1, 'Hagezi Pro++ - ~1.5M domains'),
+         ('https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/hosts/pro.plus.txt', 1, 'Hagezi Pro++ - aggressive'),
          ('https://big.oisd.nl/', 1, 'OISD Big - ~3M domains'),
          ('https://o0.pages.dev/Pro/adblock.txt', 1, '1Hosts Pro - ~500K domains'),
          ('https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts', 1, 'StevenBlack Unified - ~150K domains');"
@@ -97,7 +96,7 @@ case "$PRESET" in
         echo "  aggressive  - ~5M domains (maximum blocking)"
         echo ""
         echo "Example:"
-        echo "  $0 pihole_primary balanced"
+        echo "  $0 pihole_unbound balanced"
         exit 1
         ;;
 esac

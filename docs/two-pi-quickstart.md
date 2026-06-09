@@ -8,7 +8,7 @@ Node B `192.168.8.245`, floating VIP `192.168.8.243`, gateway `.1`.
 
 **Hardware (per node):**
 - Raspberry Pi 4 or 5, 4 GB+ RAM.
-- **Boot from a USB SSD**, not an SD card — SD cards are the #1 cause of node death.
+- **Boot from the NVMe SSD (HAT)** — reliable, no SD-card wear-out.
 - Wired Ethernet. (Optional: a USB-C / USB 2.5–10 G NIC — see `networking.md`.)
 
 **OS & software:**

@@ -63,6 +63,9 @@ Two-node VRRP failover for ad-blocking, privacy-focused DNS on Raspberry Pi.
 
 ### Fastest path — one-command bootstrap
 
+> 🛡️ **Already running and still seeing ads?** Follow **[docs/privacy-setup.md](docs/privacy-setup.md)** — the fix order (block iCloud Private Relay first, then router DNS enforcement, Hagezi lists, IoT).
+
+
 On a fresh Raspberry Pi OS (64-bit), clone and run `bootstrap.sh`. It installs
 Docker, scaffolds data dirs, seeds `.env` from the role template, brings up the
 stack, and verifies it:
@@ -705,7 +708,7 @@ Operational references:
 
 **Hardware:**
 - Raspberry Pi 4/5 (4GB+ RAM recommended)
-- 32GB+ SD card or USB SSD
+- NVMe SSD (HAT) — or 32GB+ USB SSD
 - Ethernet connection (recommended for VRRP)
 
 **Software:**

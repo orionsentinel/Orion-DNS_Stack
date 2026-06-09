@@ -15,7 +15,7 @@ everything needed to reconstruct state:
 - `keepalived/config/` — keepalived.conf + notify scripts
 
 Backups land in `backups/dns-ha-backup-<hostname>-<timestamp>.tgz`. **Copy them
-off-box** (the SD card is the thing most likely to die) — e.g. to the peer node,
+off-box** (NVMe SSD is reliable, but keep backups off-box regardless) — e.g. to the peer node,
 a NAS, or object storage.
 
 ```bash

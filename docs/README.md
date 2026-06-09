@@ -8,6 +8,7 @@ Single source of truth for Orion Sentinel DNS HA. Start at the repo
 | Doc | What it covers |
 |---|---|
 | [two-pi-quickstart.md](two-pi-quickstart.md) | Full two-Pi setup end-to-end (prerequisites → verified HA) |
+| [privacy-setup.md](privacy-setup.md) | **Fix the ads, in order** — Private Relay, router enforcement, Hagezi lists, IoT |
 | [client-network-setup.md](client-network-setup.md) | Point your LAN at the VIP; stop device/IPv6/DoH bypass |
 
 ## Core
