@@ -30,7 +30,7 @@ Avoid `:latest` in production — pin and upgrade intentionally.
 
 ## Dependency updates
 
-Dependabot opens PRs for the Python helper apps (`wizard/`, `stacks/setup-ui/`).
+Dependabot opens PRs for the Python helper app (`wizard/`).
 Merge security updates promptly after CI passes.
 
 ## Rollback

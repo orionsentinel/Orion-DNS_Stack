@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed - Cleanup & hardening pass 🧹
+
+- Removed `config/keepalived/` (duplicate of the canonical `/keepalived`) and
+  `stacks/setup-ui/` (web installer superseded by `bootstrap.sh`); dropped its
+  Dependabot entry.
+- **Memory limits** on the core services (`pihole_unbound` 1g, `keepalived` /
+  `autoheal` 64m) so a leak can't take down the Pi.
+- **Keepalived anti-flap:** default health check now probes the local resolver
+  (`pi.hole`) instead of an external name, so an ISP/internet blip can't demote
+  MASTER and drop the VIP. Override `CHECK_DNS_FQDN` for full-chain checks.
+- Deferred (own follow-up): removing `stacks/dns/` + the second `scripts/` dedup
+  (entangled — needs a careful pass).
+
 ### Added - Dependabot auto-merge 🤖
 
 - `.github/workflows/dependabot-automerge.yml`: enables GitHub native auto-merge on
