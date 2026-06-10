@@ -145,7 +145,7 @@ restore: ## Restore from latest backup
 
 sync: ## Sync Pi-hole config to secondary node (run on primary)
 	@echo "$(BOLD)Syncing Pi-hole configuration to secondary node...$(NC)"
-	@bash ops/pihole-sync.sh
+	@bash scripts/pihole-sync.sh
 	@echo "$(GREEN)✓ Sync complete$(NC)"
 
 clean: ## Remove all containers and volumes (DESTRUCTIVE - asks for confirmation)

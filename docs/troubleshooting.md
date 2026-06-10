@@ -82,9 +82,3 @@ docker compose restart pihole_unbound
 
 Common with USB 2.5G adapters. Disable EEE and USB power management, check
 cabling/switch. `dmesg -T | grep -Ei 'eth0|link (up|down)|reset' | tail`.
-
-## Promtail "unsupported protocol scheme"
-
-`LOKI_URL` is empty or missing the path. Use the full push path:
-`LOKI_URL=http://192.168.8.245:3100/loki/api/v1/push`, then
-`docker compose restart promtail`.

@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed - Second-layer cleanup 🧽
+
+Removed the dead config and tool duplication that outlived the big simplification
+(found in the follow-up review; `docs/REVIEW.md` refreshed to current state).
+
+- **Dead monitoring config:** stripped Prometheus pushgateway env (`PROM_*`) from
+  `compose.yml` + env templates, and `LOKI_URL` from all templates.
+- **Backups:** removed `stacks/backup/` and `backup/` (duplicates of `ops/orion-dns-backup.sh`).
+- **Sync:** removed the duplicate `ops/pihole-sync.sh` and the broken
+  `systemd/pihole-sync.*` units (wrong path); consolidated on `scripts/pihole-sync.sh`.
+- **Orphans:** removed `config/unbound/` (nothing builds it) + its Dependabot entry;
+  removed `scripts/apply-profile.py` + `profiles/{family,standard,paranoid}.yml` +
+  `profiles/keepalived/` (use `scripts/setup-blocklists.sh`).
+- **Stale docs:** rewrote the kitchen-sink root `.env.example` to a clean single-node
+  template; retired `docs/hardening.md` (old IP scheme/removed stacks; SECURITY.md
+  covers it); cleared exporter/promtail residue from networking/troubleshooting.
+
+Repo: 97 → 74 files. Core unchanged: 3 containers, 2-Pi VRRP HA.
+
 ### Added - Fix the ad problem (privacy hardening) 🛡️
 
 - `scripts/block-private-relay.sh` (`make block-private-relay`): blocks iCloud

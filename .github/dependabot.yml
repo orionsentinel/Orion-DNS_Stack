@@ -8,10 +8,6 @@ updates:
     schedule: {interval: weekly}
     open-pull-requests-limit: 5
 
-  - package-ecosystem: docker
-    directory: /config/unbound
-    schedule: {interval: weekly}
-    open-pull-requests-limit: 5
 
   # --- GitHub Actions (pin/upgrade CI actions) ---
   - package-ecosystem: github-actions

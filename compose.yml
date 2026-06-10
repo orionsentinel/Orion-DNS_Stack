@@ -91,10 +91,6 @@ services:
       CHECK_WEIGHT: ${CHECK_WEIGHT:--20}
       CHECK_FALL: ${CHECK_FALL:-2}
       CHECK_RISE: ${CHECK_RISE:-2}
-      # Prometheus Pushgateway integration (optional)
-      PROM_PUSHGATEWAY_URL: ${PROM_PUSHGATEWAY_URL:-}
-      PROM_JOB_NAME: ${PROM_JOB_NAME:-orion_dns_ha}
-      PROM_INSTANCE_LABEL: ${PROM_INSTANCE_LABEL:-}
     volumes:
       - ./keepalived/config:/etc/keepalived
     # Liveness only — NOT autoheal-labelled. keepalived self-heals the HA layer by
