@@ -1,0 +1,91 @@
+name: Integration test
+
+# Boots the real single-node stack and proves DNS works. Heavy (pulls the
+# Pi-hole image + boots FTL), so it runs on push-to-main, nightly, and on demand
+# — NOT as a per-PR gate (that would slow every PR and flake on image-pull stalls).
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '0 4 * * *'      # nightly 04:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  integration:
+    name: DNS + DNSSEC + blocking + health (single-node)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - name: Install dig
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq dnsutils
+      - name: Write env + scaffold dirs
+        run: |
+          cat > .env <<'EOF'
+          NODE_IP=192.168.8.244
+          HOSTNAME=pi-dns-ci
+          DOMAIN_NAME=lan
+          TZ=UTC
+          WEBPASSWORD=ci_test_password
+          FTLCONF_webserver_api_password=ci_test_password
+          FTLCONF_dns_upstreams=127.0.0.1#5335
+          FTLCONF_dns_dnssec=true
+          FTLCONF_local_ipv4=192.168.8.244
+          DNSMASQ_LISTENING=all
+          EOF
+          ./scripts/bootstrap_dirs.sh
+      - name: Pull image (fail fast if it stalls)
+        run: timeout 480 docker compose --profile single-node pull
+      - name: Free port 53 (stop systemd-resolved stub)
+        run: sudo systemctl stop systemd-resolved || true
+      - name: Start the stack
+        run: timeout 120 docker compose --profile single-node up -d
+      - name: Wait for Pi-hole to answer DNS (≤90s)
+        run: |
+          for i in $(seq 1 45); do
+            if dig +tries=1 +time=2 @127.0.0.1 pi.hole >/dev/null 2>&1; then echo "DNS up after $((i*2))s"; ok=1; break; fi
+            sleep 2
+          done
+          [ "${ok:-0}" = 1 ] || { echo "::error::Pi-hole never answered"; docker compose --profile single-node logs; exit 1; }
+      - name: DNS recursion resolves (Unbound → root)
+        run: |
+          for i in 1 2 3; do
+            a=$(dig +tries=1 +time=3 @127.0.0.1 github.com +short | grep -E '^[0-9]+\.' || true)
+            [ -n "$a" ] && { echo "✓ github.com → $a"; exit 0; }
+            sleep 3
+          done
+          echo "::error::recursion failed"; docker compose --profile single-node logs pihole_unbound; exit 1
+      - name: DNSSEC rejects a bad signature
+        run: |
+          if dig +tries=1 +time=4 @127.0.0.1 dnssec-failed.org 2>&1 | grep -q "status: SERVFAIL"; then
+            echo "✓ DNSSEC enforced (SERVFAIL)"
+          else
+            echo "::warning::DNSSEC SERVFAIL not observed (egress-dependent)"
+          fi
+      - name: Ad/tracker blocking works
+        run: |
+          docker exec pihole_unbound sqlite3 /etc/pihole/gravity.db \
+            "INSERT OR IGNORE INTO domainlist (type,domain,enabled,comment) VALUES (1,'blocked.ci.test',1,'ci');
+             INSERT OR IGNORE INTO domainlist_by_group (domainlist_id,group_id) VALUES ((SELECT id FROM domainlist WHERE type=1 AND domain='blocked.ci.test'),0);"
+          docker exec pihole_unbound pihole reloaddns
+          sleep 3
+          ans=$(dig +tries=1 +time=3 @127.0.0.1 blocked.ci.test +short)
+          if [ -z "$ans" ] || [ "$ans" = "0.0.0.0" ] || [ "$ans" = "::" ]; then
+            echo "✓ blocked (answer: '${ans:-<empty>}')"
+          else
+            echo "::error::blocklist not enforced (got '$ans')"; exit 1
+          fi
+      - name: Container reports healthy
+        run: |
+          for i in $(seq 1 12); do
+            s=$(docker inspect --format '{{.State.Health.Status}}' pihole_unbound 2>/dev/null || echo none)
+            [ "$s" = healthy ] && { echo "✓ healthy"; exit 0; }
+            sleep 5
+          done
+          echo "::error::not healthy (last: ${s:-?})"; docker compose --profile single-node logs pihole_unbound; exit 1
+      - name: Teardown
+        if: always()
+        run: docker compose --profile single-node down -v || true

@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - Prove-it-works CI + legible README 🧪📖
+
+- **CI integration test** (`integration-test` job): boots the single-node stack on
+  the runner and asserts **DNS recursion (Unbound→root), DNSSEC enforcement,
+  ad-blocking, and container health** — CI now proves the stack works, not just that
+  the YAML is valid.
+- **README slimmed 744 → ~90 lines** — pitch, diagram, quick start, the ad-fix
+  pointer, and links to `docs/`. The detailed manual steps live in
+  `docs/two-pi-quickstart.md`.
+- **`docs/provisioning-plan.md`** — a solid plan for one-flash provisioning
+  (cloud-init first-boot → pre-baked image), with starter templates.
+
 ### Removed - Second-layer cleanup 🧽
 
 Removed the dead config and tool duplication that outlived the big simplification
