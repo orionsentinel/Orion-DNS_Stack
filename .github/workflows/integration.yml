@@ -81,7 +81,7 @@ jobs:
           fi
       - name: Ad/tracker blocking works
         run: |
-          docker exec pihole_unbound sqlite3 /etc/pihole/gravity.db \
+          docker exec pihole_unbound pihole-FTL sqlite3 /etc/pihole/gravity.db \
             "INSERT OR IGNORE INTO domainlist (type,domain,enabled,comment) VALUES (1,'blocked.ci.test',1,'ci');
              INSERT OR IGNORE INTO domainlist_by_group (domainlist_id,group_id) VALUES ((SELECT id FROM domainlist WHERE type=1 AND domain='blocked.ci.test'),0);"
           docker exec pihole_unbound pihole reloaddns
