@@ -108,13 +108,16 @@ Orion-DNS_Stack/
 ├── keepalived/          # the ONE validated VRRP build
 ├── config/              # unbound + pihole config (ARM64 build)
 ├── scripts/             # deduped: bootstrap, configure-env, validate-env, verify-ha, selfcheck, sync
-├── monitoring/          # ONE optional observability stack (profiled, off by default)
 ├── backups/ provisioning/ tests/
 └── systemd/             # backup/sync/health timers (deduped)
 ```
+> Implementation note: the final build dropped the optional observability stack
+> entirely — Pi-hole's admin page is the dashboard, so there is no `monitoring/`
+> directory. See `docs/architecture.md` and the CHANGELOG.
+
 - One DNS image (mpgirro unified, ARM64-safe). One keepalived (validated
-  `/keepalived`). One SSH-based sync on a systemd timer. One observability stack
-  behind a compose profile. Optional stacks kept only if functional.
+  `/keepalived`). One SSH-based sync on a systemd timer. No separate
+  metrics/observability stack. Optional stacks kept only if functional.
 
 ## G. Exact implementation plan
 Phased, non-breaking (see PR description / plan): 0 security → 1 canonical
