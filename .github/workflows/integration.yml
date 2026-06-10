@@ -33,12 +33,19 @@ jobs:
           FTLCONF_webserver_api_password=ci_test_password
           FTLCONF_dns_upstreams=127.0.0.1#5335
           FTLCONF_dns_dnssec=true
-          FTLCONF_local_ipv4=192.168.8.244
           DNSMASQ_LISTENING=all
           EOF
           ./scripts/bootstrap_dirs.sh
       - name: Pull image (fail fast if it stalls)
         run: timeout 480 docker compose --profile single-node pull
+      - name: Free port 53 (container uses host networking)
+        run: |
+          # pihole_unbound runs with network_mode: host, so dnsmasq binds the
+          # runner's 0.0.0.0:53 — which collides with systemd-resolved on :53.
+          # Stop it (host DNS isn't needed; all test queries run in-container).
+          sudo systemctl stop systemd-resolved 2>/dev/null || true
+          sudo systemctl disable systemd-resolved 2>/dev/null || true
+          sudo ss -lntup 'sport = :53' || true
       - name: Start the stack
         run: timeout 120 docker compose --profile single-node up -d
       - name: Wait for FTL to answer DNS (hard-bounded, in-container)
