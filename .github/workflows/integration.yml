@@ -42,9 +42,13 @@ jobs:
         run: |
           # pihole_unbound runs with network_mode: host, so dnsmasq binds the
           # runner's 0.0.0.0:53 — which collides with systemd-resolved on :53.
-          # Stop it (host DNS isn't needed; all test queries run in-container).
+          # Stop it so FTL can bind. Then repoint the host resolver off the now-dead
+          # 127.0.0.53 to a real one, so the container's startup gravity download
+          # (StevenBlack blocklist) can still resolve before FTL takes over :53.
           sudo systemctl stop systemd-resolved 2>/dev/null || true
           sudo systemctl disable systemd-resolved 2>/dev/null || true
+          sudo rm -f /etc/resolv.conf
+          echo 'nameserver 1.1.1.1' | sudo tee /etc/resolv.conf >/dev/null
           sudo ss -lntup 'sport = :53' || true
       - name: Start the stack
         run: timeout 120 docker compose --profile single-node up -d
