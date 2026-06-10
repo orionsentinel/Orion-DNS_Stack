@@ -85,7 +85,6 @@ the same MTU.
 | 53/tcp+udp | DNS (Pi-hole) | both nodes + VIP |
 | 80/tcp | Pi-hole admin UI | each node IP |
 | 5335/udp | Unbound (local recursive) | localhost only |
-| 9100 / 9617 / 9080 | node / pihole / promtail exporters | `exporters` profile |
 
 ## Verifying clients actually use the VIP
 

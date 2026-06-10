@@ -26,10 +26,8 @@ Single source of truth for Orion Sentinel DNS HA. Start at the repo
 
 | Doc | What it covers |
 |---|---|
-| [profiles.md](profiles.md) | Blocklist profiles (standard / family / paranoid) |
 | [OPTIMAL_BLOCKLISTS.md](OPTIMAL_BLOCKLISTS.md) | Recommended blocklists |
 | [PIHOLE_CONFIGURATION.md](PIHOLE_CONFIGURATION.md) | Pi-hole configuration details |
-| [hardening.md](hardening.md) | Security hardening (see also [../SECURITY.md](../SECURITY.md)) |
 | [iot-containment.md](iot-containment.md) | Contain cameras/IoT: see + block telemetry (opt-in) |
 
 ## Reference
