@@ -1,8 +1,12 @@
 # One-Flash Provisioning — Plan
 
 **Goal:** flash NVMe → plug in → working DNS node in **<10 minutes, zero typing**.
-A dead Pi becomes "reflash and it rejoins itself." This is the plan; nothing here
-is built yet (it's a design + starter snippets).
+A dead Pi becomes "reflash and it rejoins itself."
+
+> **Status:** Phase 1 (cloud-init first-boot) is **built** — see
+> [`../provisioning/`](../provisioning/) for the templates and `firstboot.sh`, and
+> [`../provisioning/README.md`](../provisioning/README.md) for the flash workflow.
+> Phase 2 (pre-baked image) remains a design.
 
 ## Principles
 
@@ -62,17 +66,20 @@ runcmd:
 (Secondary is identical with `.245` / `BACKUP` / priority `150` / mirrored peer IPs,
 and `--role secondary` / `install-systemd-secondary`.)
 
-**Files to add for Phase 1:**
+**Files for Phase 1 (built — in [`../provisioning/`](../provisioning/)):**
 ```
 provisioning/
 ├── README.md
 ├── cloud-init/
 │   ├── user-data.primary.yaml      # template (placeholder secrets)
-│   └── user-data.secondary.yaml
-└── firstboot.sh                    # optional: the runcmd logic as one script
+│   ├── user-data.secondary.yaml
+│   └── user-data.single.yaml
+└── firstboot.sh                    # idempotent: clone → seed .env → bootstrap → systemd
 ```
 `bootstrap.sh` already supports `--role` and `--yes` (non-interactive), so the only
-new code is delivery + the cloud-init templates.
+new code is delivery + the cloud-init templates. `firstboot.sh` seeds `.env` from the
+full role template, then overlays the per-node secrets from `node.env` (keeping all
+stack defaults).
 
 ## Phase 2 — pre-baked image (the "wow")
 

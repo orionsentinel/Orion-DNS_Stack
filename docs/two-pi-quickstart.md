@@ -4,6 +4,10 @@ End-to-end setup of the full HA DNS stack on two Raspberry Pis, in one page.
 Addresses use the canonical scheme (`networking.md`): Node A `192.168.8.244`,
 Node B `192.168.8.245`, floating VIP `192.168.8.243`, gateway `.1`.
 
+> **Prefer zero typing?** Flash each Pi with a per-node cloud-init file and the node
+> installs itself on first boot — see [`../provisioning/README.md`](../provisioning/README.md).
+> The guided manual flow below is the alternative.
+
 ## Prerequisites
 
 **Hardware (per node):**
@@ -51,28 +55,22 @@ cd /opt/orion-dns-ha
 sudo ./bootstrap.sh --role primary
 ```
 
-`bootstrap.sh` seeds `.env` from the primary template and **stops** so you can set
-secrets:
-
-```bash
-sudo nano .env
-#   WEBPASSWORD=<strong unique password>
-#   VRRP_PASSWORD=<EXACTLY 8 chars, same on both nodes>
-#   confirm NODE_IP=192.168.8.244 / VIP_ADDRESS=192.168.8.243 / NETWORK_INTERFACE=eth0
-sudo ./bootstrap.sh --role primary        # re-run: brings the stack up + verifies
-```
+`bootstrap.sh` seeds `.env` from the primary template and then **walks you through the
+handful of values that matter** — IPs, interface, timezone, web password, and the
+8-char VRRP password (hidden, with confirmation). It validates each, runs a preflight
+check, and brings the stack up. (Prefer editing by hand? Run
+`sudo ./bootstrap.sh --role primary --yes` after `nano .env`, or just press Enter
+through the prompts to accept the defaults.)
 
 ## 3. Node B — secondary
 
-Same, on the second Pi, with the **secondary** role and the **same** `WEBPASSWORD`
-and `VRRP_PASSWORD`:
+Same, on the second Pi, with the **secondary** role. The wizard reminds you that
+`WEBPASSWORD` and `VRRP_PASSWORD` must be the **same** as Node A:
 
 ```bash
 git clone https://github.com/orionsentinel/Orion-DNS_Stack.git /opt/orion-dns-ha
 cd /opt/orion-dns-ha
-sudo ./bootstrap.sh --role secondary
-sudo nano .env        # NODE_IP=192.168.8.245, matching secrets
-sudo ./bootstrap.sh --role secondary
+sudo ./bootstrap.sh --role secondary       # guided: enter NODE_IP=192.168.8.245 + matching secrets
 ```
 
 ## 4. Verify HA

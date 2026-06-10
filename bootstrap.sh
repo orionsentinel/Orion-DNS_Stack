@@ -48,6 +48,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 SUDO=""; [[ "$(id -u)" -ne 0 ]] && SUDO="sudo"
+INTERACTIVE=0; [[ -t 0 && -t 1 ]] && INTERACTIVE=1
 
 # --- role ------------------------------------------------------------------
 if [[ -z "$ROLE" ]]; then
@@ -100,7 +101,15 @@ if [[ ! -f .env ]]; then
   cp "$TEMPLATE" .env
   log "seeded .env from $TEMPLATE"
 fi
-# Refuse to start with placeholder secrets unless explicitly overridden.
+# If secrets are still placeholders, guide the user through filling them in
+# (interactive only). The zero-touch path (--yes / no TTY) skips the wizard.
+if grep -qE '^(WEBPASSWORD=CHANGE_ME|VRRP_PASSWORD=CHANGE_8c)' .env; then
+  if [[ "$INTERACTIVE" -eq 1 && "$ASSUME_YES" -eq 0 ]]; then
+    bash "$REPO_DIR/scripts/configure-env.sh" --role "$ROLE" --env .env \
+      || warn "configuration wizard exited early — falling back to manual edit"
+  fi
+fi
+# Final safety net: refuse to start with placeholder secrets unless overridden.
 if grep -qE '^(WEBPASSWORD=CHANGE_ME|VRRP_PASSWORD=CHANGE_8c)' .env; then
   warn "Edit .env and set real secrets before starting:"
   warn "    sudo nano $REPO_DIR/.env"
@@ -120,7 +129,17 @@ if [[ "$DO_NIC" -eq 1 ]]; then
   $SUDO bash "$REPO_DIR/scripts/configure-nic.sh" || warn "NIC config skipped/failed — see docs/networking.md"
 fi
 
-# --- 6. bring up -----------------------------------------------------------
+# --- 6. preflight + bring up -----------------------------------------------
+step "Preflight checks"
+if ! bash "$REPO_DIR/scripts/validate-env.sh" .env; then
+  if [[ "$ASSUME_YES" -eq 1 ]]; then
+    warn "--yes given: continuing despite preflight errors (NOT for production)"
+  else
+    err "preflight failed — fix the above in .env and re-run bootstrap.sh"
+    exit 1
+  fi
+fi
+
 step "Starting the stack (profile: $PROFILE)"
 docker compose --profile "$PROFILE" config -q || { err "compose config invalid"; exit 1; }
 docker compose --profile "$PROFILE" up -d

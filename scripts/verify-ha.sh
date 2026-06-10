@@ -19,7 +19,7 @@ COLOR_RESET='\033[0m'
 # Default values from env or fallback
 VIP_ADDRESS="${VIP_ADDRESS:-192.168.8.243}"
 NODE_IP="${NODE_IP:-}"
-NETWORK_INTERFACE="${NETWORK_INTERFACE:-eth1}"
+NETWORK_INTERFACE="${NETWORK_INTERFACE:-eth0}"
 
 echo "============================================================================="
 echo "  Orion Sentinel DNS HA - Health Verification"
@@ -76,7 +76,7 @@ else
   echo -e "${COLOR_RED}✗ Keepalived container is NOT running${COLOR_RESET}"
   echo ""
   echo "Start with:"
-  echo "  cd /opt/orion-dns-ha/Orion-sentinel-ha-dns"
+  echo "  cd /opt/orion-dns-ha"
   echo "  docker compose --profile two-node-ha-primary up -d"
   echo "  (or --profile two-node-ha-backup for secondary)"
 fi

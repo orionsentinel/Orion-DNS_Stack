@@ -39,12 +39,15 @@ sudo apt update
 git clone https://github.com/orionsentinel/Orion-DNS_Stack.git /opt/orion-dns-ha
 cd /opt/orion-dns-ha
 sudo ./bootstrap.sh --role primary       # Node A (.244).  --role secondary on Node B (.245)
-#   It stops so you can set secrets in .env, then re-run.
+#   It guides you through the secrets + IPs, validates them, and brings the stack up.
 #   Single Pi, no HA:  sudo ./bootstrap.sh --role single
 ```
 
 Then point your router's DHCP **DNS server at the VIP `192.168.8.243`**.
 Full walkthrough: **[docs/two-pi-quickstart.md](docs/two-pi-quickstart.md)**.
+
+**Zero typing?** Flash each Pi with a per-node cloud-init file and it installs itself on
+first boot — **[provisioning/README.md](provisioning/README.md)**.
 
 ## Still seeing ads? Do this, in order
 

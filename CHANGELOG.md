@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - Guided setup + zero-touch provisioning 🧭⚡
+
+- **Guided terminal wizard** (`scripts/configure-env.sh`, `make configure`): on an
+  interactive run, `bootstrap.sh` now walks you through the values that matter (IPs,
+  interface, timezone, web password, and the 8-char VRRP password — hidden, confirmed,
+  validated) and writes them into `.env`, instead of stopping for a hand-edit. The
+  secondary node is reminded to reuse the primary's `WEBPASSWORD`/`VRRP_PASSWORD`.
+- **Preflight check** — rewrote `scripts/validate-env.sh` to the canonical single-file
+  schema (`NODE_IP`/`NODE_ROLE`/`VIP_ADDRESS`/`PEER_IP`/`VRRP_PASSWORD`/`WEBPASSWORD`…),
+  enforcing the exactly-8-char VRRP rule, placeholder detection, IPv4 validity, peer
+  reachability and interface existence. `bootstrap.sh` runs it before `up`. This also
+  **fixes `make up-core`**, which previously failed on a valid `.env` because the old
+  validator checked a stale Pi-hole/Grafana schema that no longer exists.
+- **Zero-touch provisioning (`provisioning/`)** — Phase 1 of the one-flash plan is built:
+  per-node cloud-init templates (`user-data.{primary,secondary,single}.yaml`) and an
+  idempotent `firstboot.sh` (clone → seed `.env` from the role template → overlay per-node
+  secrets → `bootstrap --yes` → install systemd units). Flash a card, fill two secrets,
+  boot — the node installs itself. See `provisioning/README.md`.
+
+### Removed
+
+- **`scripts/doctor.sh`** — a Suricata/EveBox "NetSec" diagnostic that belonged to a
+  different repo (referenced `/mnt/orion-nvme-netsec`, containers absent from this stack);
+  dead weight here, removed.
+
 ### Added - GitOps convergence + off-box backups 🔁🔐
 
 - **`ops/converge.sh`** (`make converge`) + `orion-dns-ha-converge.{service,timer}`:

@@ -1,0 +1,37 @@
+#cloud-config
+# =============================================================================
+# Orion DNS — PRIMARY node (Node A) zero-touch first boot.
+#
+# Drop this file as `user-data` on the boot partition (Raspberry Pi Imager:
+# "custom" cloud-init, or copy it by hand after flashing). Fill in the two
+# secrets below, then boot — the node clones the repo, installs the stack, and
+# enables it on boot. No typing on the Pi.
+#
+# Secrets live ONLY in this file (on the boot partition / your provisioning
+# machine) — never committed to git, never baked into an image.
+#
+#   VRRP_PASSWORD must be EXACTLY 8 characters and IDENTICAL on both nodes.
+#   WEBPASSWORD   must be strong and IDENTICAL on both nodes.
+# Canonical addressing: docs/networking.md.
+# =============================================================================
+package_update: true
+packages: [git, ca-certificates]
+
+write_files:
+  - path: /etc/orion-dns/node.env       # per-node secrets, 0600, NOT in git
+    permissions: '0600'
+    content: |
+      NODE_IP=192.168.8.244
+      NODE_ROLE=MASTER
+      KEEPALIVED_PRIORITY=200
+      VIP_ADDRESS=192.168.8.243
+      NETWORK_INTERFACE=eth0
+      PEER_IP=192.168.8.245
+      UNICAST_SRC_IP=192.168.8.244
+      WEBPASSWORD=CHANGE_ME_strong_password
+      VRRP_PASSWORD=CHANGE_8c
+      TZ=Europe/Athens
+
+runcmd:
+  - [git, clone, "https://github.com/orionsentinel/Orion-DNS_Stack.git", /opt/orion-dns-ha]
+  - [bash, /opt/orion-dns-ha/provisioning/firstboot.sh, --env, /etc/orion-dns/node.env]

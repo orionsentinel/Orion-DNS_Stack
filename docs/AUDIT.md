@@ -107,7 +107,7 @@ Orion-DNS_Stack/
 │   └── diagrams/        #   disaster-recovery, upgrade-guide
 ├── keepalived/          # the ONE validated VRRP build
 ├── config/              # unbound + pihole config (ARM64 build)
-├── scripts/             # deduped: bootstrap, verify-ha, sync, backup, restore, doctor
+├── scripts/             # deduped: bootstrap, configure-env, validate-env, verify-ha, selfcheck, sync
 ├── monitoring/          # ONE optional observability stack (profiled, off by default)
 ├── backups/ provisioning/ tests/
 └── systemd/             # backup/sync/health timers (deduped)

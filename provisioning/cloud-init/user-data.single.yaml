@@ -1,0 +1,22 @@
+#cloud-config
+# =============================================================================
+# Orion DNS — SINGLE node (no HA) zero-touch first boot.
+#
+# One Pi: Pi-hole + Unbound + autoheal, no keepalived/VIP. Fill in WEBPASSWORD,
+# confirm the IP/interface, then boot. Canonical addressing: docs/networking.md.
+# =============================================================================
+package_update: true
+packages: [git, ca-certificates]
+
+write_files:
+  - path: /etc/orion-dns/node.env       # per-node secrets, 0600, NOT in git
+    permissions: '0600'
+    content: |
+      NODE_IP=192.168.8.244
+      NETWORK_INTERFACE=eth0
+      WEBPASSWORD=CHANGE_ME_strong_password
+      TZ=Europe/Athens
+
+runcmd:
+  - [git, clone, "https://github.com/orionsentinel/Orion-DNS_Stack.git", /opt/orion-dns-ha]
+  - [bash, /opt/orion-dns-ha/provisioning/firstboot.sh, --env, /etc/orion-dns/node.env, --role, single]

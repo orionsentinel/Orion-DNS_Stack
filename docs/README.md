@@ -10,7 +10,8 @@ Single source of truth for Orion Sentinel DNS HA. Start at the repo
 | [two-pi-quickstart.md](two-pi-quickstart.md) | Full two-Pi setup end-to-end (prerequisites → verified HA) |
 | [privacy-setup.md](privacy-setup.md) | **Fix the ads, in order** — Private Relay, router enforcement, Hagezi lists, IoT |
 | [client-network-setup.md](client-network-setup.md) | Point your LAN at the VIP; stop device/IPv6/DoH bypass |
-| [provisioning-plan.md](provisioning-plan.md) | One-flash provisioning (cloud-init → working node) — plan |
+| [../provisioning/README.md](../provisioning/README.md) | **Zero-touch install** — flash a cloud-init file, boot, node installs itself |
+| [provisioning-plan.md](provisioning-plan.md) | One-flash provisioning design (Phase 1 built, Phase 2 baked image) |
 
 ## Core
 
