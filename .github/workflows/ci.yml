@@ -166,3 +166,69 @@ jobs:
             echo "✗ stale clone URL found"; exit 1
           fi
           echo "✓ no stale clone URLs"
+
+  integration-test:
+    name: Integration test (DNS + blocking + DNSSEC)
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - name: Install dig
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq dnsutils
+      - name: Write CI env + scaffold dirs
+        run: |
+          printf '%s\n' "$CI_ENV" > .env
+          ./scripts/bootstrap_dirs.sh
+      - name: Pull images (while host DNS still works)
+        run: docker compose --profile single-node pull -q
+      - name: Free port 53 (stop systemd-resolved stub)
+        run: sudo systemctl stop systemd-resolved || true
+      - name: Start the single-node stack
+        run: docker compose --profile single-node up -d
+      - name: Wait for Pi-hole to answer DNS (≤120s)
+        run: |
+          for i in $(seq 1 60); do
+            if dig +tries=1 +time=2 @127.0.0.1 pi.hole >/dev/null 2>&1; then echo "DNS up after $((i*2))s"; ok=1; break; fi
+            sleep 2
+          done
+          if [ "${ok:-0}" != 1 ]; then echo "::error::Pi-hole never came up"; docker compose --profile single-node logs; exit 1; fi
+      - name: DNS recursion resolves (Unbound → root)
+        run: |
+          for i in 1 2 3; do
+            a=$(dig +tries=1 +time=3 @127.0.0.1 github.com +short | grep -E '^[0-9]+\.' || true)
+            [ -n "$a" ] && { echo "✓ github.com → $a"; exit 0; }
+            sleep 3
+          done
+          echo "::error::recursion failed"; docker compose --profile single-node logs pihole_unbound; exit 1
+      - name: DNSSEC validation rejects a bad signature
+        run: |
+          # dnssec-failed.org is deliberately broken — a validating resolver must SERVFAIL
+          if dig +tries=1 +time=4 @127.0.0.1 dnssec-failed.org 2>&1 | grep -q "status: SERVFAIL"; then
+            echo "✓ DNSSEC enforced (SERVFAIL on bad domain)"
+          else
+            echo "::warning::DNSSEC SERVFAIL not observed (upstream/egress dependent) — not failing the build"
+          fi
+      - name: Ad/tracker blocking works
+        run: |
+          docker exec pihole_unbound sqlite3 /etc/pihole/gravity.db \
+            "INSERT OR IGNORE INTO domainlist (type,domain,enabled,comment) VALUES (1,'blocked.ci.test',1,'ci');
+             INSERT OR IGNORE INTO domainlist_by_group (domainlist_id,group_id) VALUES ((SELECT id FROM domainlist WHERE type=1 AND domain='blocked.ci.test'),0);"
+          docker exec pihole_unbound pihole reloaddns
+          sleep 3
+          ans=$(dig +tries=1 +time=3 @127.0.0.1 blocked.ci.test +short)
+          if [ -z "$ans" ] || [ "$ans" = "0.0.0.0" ] || [ "$ans" = "::" ]; then
+            echo "✓ blocked.ci.test is blocked (answer: '${ans:-<empty>}')"
+          else
+            echo "::error::blocklist not enforced (got '$ans')"; exit 1
+          fi
+      - name: Container reports healthy
+        run: |
+          for i in $(seq 1 12); do
+            s=$(docker inspect --format '{{.State.Health.Status}}' pihole_unbound 2>/dev/null || echo none)
+            [ "$s" = healthy ] && { echo "✓ healthy"; exit 0; }
+            sleep 5
+          done
+          echo "::error::container not healthy (last: ${s:-?})"; docker compose --profile single-node logs pihole_unbound; exit 1
+      - name: Teardown
+        if: always()
+        run: docker compose --profile single-node down -v || true
