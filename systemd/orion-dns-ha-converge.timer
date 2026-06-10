@@ -1,0 +1,15 @@
+[Unit]
+Description=Orion DNS HA - GitOps converge timer
+Documentation=https://github.com/orionsentinel/Orion-DNS_Stack
+Requires=orion-dns-ha-converge.service
+
+[Timer]
+# Converge to the declared ref daily (pin CONVERGE_REF to a release tag for prod).
+OnCalendar=daily
+# A randomized delay so a fleet doesn't all converge at the same instant.
+RandomizedDelaySec=30min
+OnBootSec=15min
+Persistent=true
+
+[Install]
+WantedBy=timers.target
