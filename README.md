@@ -28,7 +28,7 @@ Three containers. ARM64. No dashboards. Boring on purpose.
 - **Keepalived** — floats one VIP between the two Pis. Clients use a single DNS IP that survives a node dying.
 - **autoheal** — restarts a wedged container. Layered self-healing; see [docs/architecture.md](docs/architecture.md).
 
-CI **boots the stack and proves** DNS resolution, DNSSEC validation, ad-blocking, and container health on every change.
+CI **boots the stack and proves** DNS resolution, DNSSEC validation, ad-blocking, and container health (on push to `main` + nightly).
 
 ## Quick start
 
