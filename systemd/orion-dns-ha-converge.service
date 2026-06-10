@@ -1,0 +1,17 @@
+[Unit]
+Description=Orion DNS HA - GitOps converge (pull declared state, re-apply, rollback on failure)
+Documentation=https://github.com/orionsentinel/Orion-DNS_Stack
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/orion-dns-ha
+EnvironmentFile=-/opt/orion-dns-ha/.env
+ExecStart=/opt/orion-dns-ha/ops/converge.sh
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=orion-dns-converge
+
+[Install]
+WantedBy=multi-user.target

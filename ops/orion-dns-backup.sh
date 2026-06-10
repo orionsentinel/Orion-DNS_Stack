@@ -30,6 +30,9 @@ set -euo pipefail
 
 # Configuration
 REPO_DIR="${REPO_DIR:-/opt/orion-dns-ha}"
+# Load node config (RESTIC_*, BACKUP_RETENTION_DAYS, …) from .env if present
+# shellcheck disable=SC1091
+[ -f "${REPO_DIR}/.env" ] && { set -a; . "${REPO_DIR}/.env"; set +a; }
 BACKUP_DIR="${REPO_DIR}/backups"
 HOST="$(hostname -s 2>/dev/null || echo unknown)"
 TIMESTAMP="$(date +%Y%m%d-%H%M%S)"
@@ -102,6 +105,33 @@ log "Backup completed: ${BACKUP_FILE}"
 # Get backup file size
 BACKUP_SIZE="$(du -h "${BACKUP_FILE}" | cut -f1)"
 log "Backup size: ${BACKUP_SIZE}"
+
+# =============================================================================
+# Off-box encrypted copy via restic (optional — only if RESTIC_REPOSITORY set)
+#   Examples:  sftp:user@nas:/backups/orion  |  b2:bucket:path  |  s3:host/bucket
+# =============================================================================
+if [[ -n "${RESTIC_REPOSITORY:-}" ]]; then
+    if ! command -v restic >/dev/null 2>&1; then
+        log "RESTIC_REPOSITORY set but 'restic' not installed (sudo apt-get install -y restic) — skipping off-box."
+    elif [[ -z "${RESTIC_PASSWORD:-}" && -z "${RESTIC_PASSWORD_FILE:-}" ]]; then
+        log "RESTIC_REPOSITORY set but no RESTIC_PASSWORD/RESTIC_PASSWORD_FILE — skipping off-box."
+    else
+        export RESTIC_REPOSITORY
+        [ -n "${RESTIC_PASSWORD:-}" ] && export RESTIC_PASSWORD
+        [ -n "${RESTIC_PASSWORD_FILE:-}" ] && export RESTIC_PASSWORD_FILE
+        log "Off-box: restic backup → ${RESTIC_REPOSITORY}"
+        restic snapshots >/dev/null 2>&1 || restic init >/dev/null 2>&1 || log "restic init failed (continuing)."
+        if restic backup --tag orion-dns --host "${HOST}" "${BACKUP_FILE}" >/dev/null 2>&1; then
+            log "Off-box backup OK."
+            restic forget --tag orion-dns \
+                --keep-daily "${RESTIC_KEEP_DAILY:-7}" \
+                --keep-weekly "${RESTIC_KEEP_WEEKLY:-4}" \
+                --prune >/dev/null 2>&1 || log "restic forget/prune failed (non-fatal)."
+        else
+            log "WARNING: restic off-box backup failed — local backup is still intact."
+        fi
+    fi
+fi
 
 # =============================================================================
 # Retention: delete backups older than RETENTION_DAYS

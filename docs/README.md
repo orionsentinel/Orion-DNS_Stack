@@ -21,6 +21,7 @@ Single source of truth for Orion Sentinel DNS HA. Start at the repo
 | [troubleshooting.md](troubleshooting.md) | Common failures and fixes |
 | [disaster-recovery.md](disaster-recovery.md) | Backup/restore, <1h rebuild |
 | [upgrade-guide.md](upgrade-guide.md) | Rolling, zero-downtime upgrades |
+| [gitops-backups.md](gitops-backups.md) | GitOps convergence + encrypted off-box backups (opt-in) |
 | [branching-strategy.md](branching-strategy.md) | Branches, CI gate, releases |
 
 ## Topic guides

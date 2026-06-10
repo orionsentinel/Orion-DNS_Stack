@@ -9,7 +9,7 @@
 #   make restart          - Restart all services
 #   make clean            - Remove all containers and volumes (DESTRUCTIVE)
 
-.PHONY: help up-core down restart logs logs-follow health-check test backup clean validate-env configure-nic list-nics selfcheck test-failover block-private-relay setup-blocklists
+.PHONY: help up-core down restart logs logs-follow health-check test backup clean validate-env configure-nic list-nics selfcheck test-failover block-private-relay setup-blocklists converge
 
 # Default target
 .DEFAULT_GOAL := help
@@ -142,6 +142,9 @@ restore: ## Restore from latest backup
 	@echo "$(BOLD)Restoring from backup...$(NC)"
 	@bash ops/orion-dns-restore.sh
 	@echo "$(GREEN)✓ Restore complete$(NC)"
+
+converge: ## GitOps: pull the declared ref and re-apply (rolls back if DNS breaks)
+	@bash ops/converge.sh
 
 sync: ## Sync Pi-hole config to secondary node (run on primary)
 	@echo "$(BOLD)Syncing Pi-hole configuration to secondary node...$(NC)"

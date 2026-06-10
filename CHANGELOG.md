@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - GitOps convergence + off-box backups 🔁🔐
+
+- **`ops/converge.sh`** (`make converge`) + `orion-dns-ha-converge.{service,timer}`:
+  a node fetches `CONVERGE_REF`, fast-forwards, re-applies the stack, and **rolls
+  back automatically if DNS breaks**. Run on the timer, the fleet self-heals to the
+  repo's declared state (pin `CONVERGE_REF` to a release tag for production).
+- **Encrypted off-box backups:** `ops/orion-dns-backup.sh` now also pushes the
+  snapshot via **restic** when `RESTIC_REPOSITORY` is set (SFTP/S3/B2/rclone),
+  encrypted + deduplicated + retention. Opt-in; local-only by default.
+- New `.env` keys (`CONVERGE_REF`, `RESTIC_*`) and `docs/gitops-backups.md`.
+
 ### Added - Prove-it-works CI + legible README 🧪📖
 
 - **CI integration test** (`integration-test` job): boots the single-node stack on
