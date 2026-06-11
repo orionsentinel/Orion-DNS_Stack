@@ -30,8 +30,9 @@ Avoid `:latest` in production — pin and upgrade intentionally.
 
 ## Dependency updates
 
-Dependabot opens PRs for the Python helper app (`wizard/`).
-Merge security updates promptly after CI passes.
+Dependabot opens weekly PRs for the `keepalived` container base image
+(`/keepalived`) and the CI GitHub Actions. Merge security updates promptly after
+CI passes.
 
 ## Rollback
 

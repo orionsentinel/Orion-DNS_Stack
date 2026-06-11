@@ -9,7 +9,7 @@
 #   make restart          - Restart all services
 #   make clean            - Remove all containers and volumes (DESTRUCTIVE)
 
-.PHONY: help up-core down restart logs logs-follow health-check test backup clean validate-env configure-nic list-nics selfcheck test-failover block-private-relay setup-blocklists converge
+.PHONY: help up-core down restart logs logs-follow health-check test backup clean validate-env preflight configure configure-nic list-nics selfcheck test-failover block-private-relay setup-blocklists converge
 
 # Default target
 .DEFAULT_GOAL := help
@@ -60,6 +60,17 @@ validate-env: ## Validate environment configuration
 	else \
 		echo "$(GREEN)✓ .env file exists$(NC)"; \
 	fi
+
+preflight: validate-env ## Preflight check .env before starting (alias for validate-env)
+
+configure: ## Guided, role-aware configuration of .env (interactive)
+	@if [ ! -f .env ]; then \
+		echo "$(RED)Error: .env not found. Seed one first:$(NC)"; \
+		echo "$(YELLOW)  cp env/primary.env.example .env   # or secondary.env.example / .env.example$(NC)"; \
+		exit 1; \
+	fi
+	@ROLE=$$(grep -q "NODE_ROLE=MASTER" .env && echo primary || (grep -q "NODE_ROLE=BACKUP" .env && echo secondary || echo single)); \
+		bash scripts/configure-env.sh --role $$ROLE --env .env
 
 up-core: validate-env ## Start core DNS services (pihole + unbound + keepalived)
 	@echo "$(BOLD)Starting core DNS services...$(NC)"

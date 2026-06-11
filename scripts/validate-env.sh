@@ -1,444 +1,174 @@
 #!/usr/bin/env bash
-# Validate .env file for required variables and secure passwords
-# This script checks for:
-# - Required variables are present (based on DEPLOYMENT_MODE)
-# - Passwords are not default/weak values
-# - IP addresses are valid and in correct subnet
-# - VIP is not network/broadcast address
-# - Proper formatting of KEY=VALUE pairs
-
+# =============================================================================
+# validate-env.sh — preflight check for an Orion DNS node's .env.
+#
+# Run before bringing the stack up (bootstrap.sh and `make up-core` both call
+# it). It fails fast with a clear message instead of letting a misconfigured
+# node crash a container later. Run directly any time:  make preflight
+#
+# Schema is the canonical single-file .env (see env/*.example, docs/networking.md):
+#   NODE_IP NODE_ROLE VIP_ADDRESS PEER_IP UNICAST_SRC_IP NETWORK_INTERFACE
+#   VRRP_PASSWORD WEBPASSWORD KEEPALIVED_PRIORITY TZ
+#
+# Exit 0 = ready (warnings allowed); non-zero = hard errors that must be fixed.
+# =============================================================================
 set -o pipefail
-IFS=$'\n\t'
 
 REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || (cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd))"
-ENV_FILE="$REPO_ROOT/.env"
+ENV_FILE="${1:-$REPO_ROOT/.env}"
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
-
-log() { echo -e "${GREEN}[✓]${NC} $*"; }
+RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; NC='\033[0m'
+log()  { echo -e "${GREEN}[✓]${NC} $*"; }
 warn() { echo -e "${YELLOW}[!]${NC} $*"; }
-err() { echo -e "${RED}[✗]${NC} $*" >&2; }
+err()  { echo -e "${RED}[✗]${NC} $*" >&2; }
 
-VALIDATION_ERRORS=0
-VALIDATION_WARNINGS=0
+ERRORS=0; WARNINGS=0
 
-# Check if .env file exists
 if [[ ! -f "$ENV_FILE" ]]; then
-    err ".env file not found at $ENV_FILE"
-    err "Please create one from env/.env.two-pi-ha.example or .env.example:"
-    err "  cp env/.env.two-pi-ha.example .env"
-    exit 1
+  err ".env not found at $ENV_FILE"
+  err "Seed one with ./bootstrap.sh, or copy a template:"
+  err "  cp env/primary.env.example .env   # or secondary.env.example / .env.example"
+  exit 1
 fi
 
-log "Validating $ENV_FILE"
-echo ""
+# Read a key's literal value (everything after the first '='); empty if unset.
+kv() { grep -E "^$1=" "$ENV_FILE" 2>/dev/null | head -1 | cut -d= -f2- | tr -d '\r'; }
 
-# Load environment variables (strip inline comments for sourcing)
-# Create a temporary file without inline comments
-TEMP_ENV=$(mktemp)
-trap "rm -f $TEMP_ENV" EXIT
-
-# Strip inline comments for safe sourcing
-while IFS= read -r line; do
-    # Skip full-line comments and empty lines
-    [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
-    
-    # Strip inline comments but preserve the KEY=VALUE part
-    if [[ "$line" =~ ^([^#]+) ]]; then
-        echo "${BASH_REMATCH[1]}" >> "$TEMP_ENV"
-    fi
-done < "$ENV_FILE"
-
-set -a
-# shellcheck disable=SC1090
-source "$TEMP_ENV" 2>/dev/null || {
-    warn "Could not source .env file completely - some variables may be complex"
+valid_ipv4() {
+  local ip="$1" o
+  [[ "$ip" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]] || return 1
+  IFS='.' read -ra _o <<< "$ip"
+  for o in "${_o[@]}"; do ((o <= 255)) || return 1; done
+  return 0
 }
-set +a
+# /24-style network compare (first three octets)
+same_subnet24() { [[ "${1%.*}" == "${2%.*}" ]]; }
+is_placeholder() { [[ "$1" == CHANGE_ME* || "$1" == "CHANGE_8c" || -z "$1" ]]; }
+# check_ipv4 NAME VALUE — logs/validates; counts an error on bad IPv4 (skips empty)
+check_ipv4() {
+  local name="$1" val="$2"
+  [[ -z "$val" ]] && return 0
+  if valid_ipv4 "$val"; then log "$name $val is a valid IPv4"; else err "$name has invalid IPv4: $val"; ((ERRORS++)); fi
+}
 
-# Detect deployment mode
-DEPLOYMENT_MODE="${DEPLOYMENT_MODE:-}"
-if [[ -z "$DEPLOYMENT_MODE" ]]; then
-    # Try to infer from other variables
-    if [[ -n "${PI1_IP:-}" ]] && [[ -n "${PI2_IP:-}" ]]; then
-        DEPLOYMENT_MODE="two-pi-ha"
-    elif [[ -n "${HOST_IP:-}" ]]; then
-        DEPLOYMENT_MODE="single-pi"
-    fi
-fi
+NODE_ROLE="$(kv NODE_ROLE)"
+HA=0
+case "$NODE_ROLE" in MASTER|BACKUP) HA=1;; esac
 
-echo "Detected deployment mode: ${DEPLOYMENT_MODE:-unknown}"
-echo ""
+echo "Preflight: $ENV_FILE"
+echo "Mode: $([[ $HA -eq 1 ]] && echo "HA ($NODE_ROLE)" || echo "single-node")"
+echo
 
-# Define required variables based on deployment mode
-case "${DEPLOYMENT_MODE:-}" in
-    two-pi-ha)
-        REQUIRED_VARS=(
-            "HOST_IP"
-            "PI1_IP"
-            "PI2_IP"
-            "VIP_ADDRESS"
-            "NETWORK_INTERFACE"
-            "SUBNET"
-            "GATEWAY"
-            "TZ"
-            "PIHOLE_PASSWORD"
-            "GRAFANA_ADMIN_USER"
-            "GRAFANA_ADMIN_PASSWORD"
-            "VRRP_PASSWORD"
-        )
-        ;;
-    single-pi-ha)
-        REQUIRED_VARS=(
-            "HOST_IP"
-            "VIP_ADDRESS"
-            "NETWORK_INTERFACE"
-            "SUBNET"
-            "GATEWAY"
-            "TZ"
-            "PIHOLE_PASSWORD"
-            "GRAFANA_ADMIN_PASSWORD"
-            "VRRP_PASSWORD"
-        )
-        ;;
-    two-pi-simple|single-pi|*)
-        # Fallback: require common variables
-        REQUIRED_VARS=(
-            "NETWORK_INTERFACE"
-            "SUBNET"
-            "GATEWAY"
-            "TZ"
-            "PIHOLE_PASSWORD"
-        )
-        # For two-pi-simple or unknown, check some additional vars if present
-        if [[ -n "${VIP_ADDRESS:-}" ]] || [[ -n "${HOST_IP:-}" ]]; then
-            REQUIRED_VARS+=("HOST_IP")
-        fi
-        ;;
-esac
+# --- required variables ----------------------------------------------------
+REQUIRED=(NODE_IP NETWORK_INTERFACE TZ WEBPASSWORD)
+[[ $HA -eq 1 ]] && REQUIRED+=(VIP_ADDRESS PEER_IP UNICAST_SRC_IP VRRP_PASSWORD KEEPALIVED_PRIORITY)
 
-echo "Checking required variables..."
-for var in "${REQUIRED_VARS[@]}"; do
-    if [[ -z "${!var:-}" ]]; then
-        err "Required variable $var is not set"
-        ((VALIDATION_ERRORS++))
-    else
-        log "$var is set"
-    fi
+echo "Required variables..."
+for v in "${REQUIRED[@]}"; do
+  if [[ -z "$(kv "$v")" ]]; then err "$v is not set"; ((ERRORS++)); else log "$v is set"; fi
 done
 
-# Check optional but recommended variables
-OPTIONAL_RECOMMENDED=(
-    "GRAFANA_ADMIN_USER"
-    "GRAFANA_ADMIN_PASSWORD"
-)
-
-echo ""
-echo "Checking recommended variables..."
-for var in "${OPTIONAL_RECOMMENDED[@]}"; do
-    # Skip if already in required list
-    if printf '%s\n' "${REQUIRED_VARS[@]}" | grep -qx "$var"; then
-        continue
-    fi
-    if [[ -z "${!var:-}" ]]; then
-        warn "Recommended variable $var is not set"
-        ((VALIDATION_WARNINGS++))
-    fi
-done
-
-echo ""
-echo "Checking for default/weak passwords..."
-
-# Check PIHOLE_PASSWORD
-PIHOLE_PASSWORD="${PIHOLE_PASSWORD:-}"
-if [[ -n "$PIHOLE_PASSWORD" ]]; then
-    if [[ "$PIHOLE_PASSWORD" == "CHANGE_ME_REQUIRED" ]] || \
-       [[ "$PIHOLE_PASSWORD" == "ChangeThisSecurePassword123!" ]] || \
-       [[ "$PIHOLE_PASSWORD" == "admin" ]] || \
-       [[ "$PIHOLE_PASSWORD" == "password" ]]; then
-        err "PIHOLE_PASSWORD is using a default or weak value"
-        err "Generate a secure password with: openssl rand -base64 32"
-        ((VALIDATION_ERRORS++))
-    elif [[ ${#PIHOLE_PASSWORD} -lt 8 ]]; then
-        err "PIHOLE_PASSWORD is too short (minimum 8 characters)"
-        ((VALIDATION_ERRORS++))
-    else
-        log "PIHOLE_PASSWORD appears secure"
-    fi
-fi
-
-# Check GRAFANA_ADMIN_PASSWORD
-GRAFANA_ADMIN_PASSWORD="${GRAFANA_ADMIN_PASSWORD:-}"
-if [[ -n "$GRAFANA_ADMIN_PASSWORD" ]]; then
-    if [[ "$GRAFANA_ADMIN_PASSWORD" == "CHANGE_ME_REQUIRED" ]] || \
-       [[ "$GRAFANA_ADMIN_PASSWORD" == "ChangeThisGrafanaPassword!" ]] || \
-       [[ "$GRAFANA_ADMIN_PASSWORD" == "admin" ]] || \
-       [[ "$GRAFANA_ADMIN_PASSWORD" == "password" ]]; then
-        err "GRAFANA_ADMIN_PASSWORD is using a default or weak value"
-        err "Generate a secure password with: openssl rand -base64 32"
-        ((VALIDATION_ERRORS++))
-    elif [[ ${#GRAFANA_ADMIN_PASSWORD} -lt 8 ]]; then
-        err "GRAFANA_ADMIN_PASSWORD is too short (minimum 8 characters)"
-        ((VALIDATION_ERRORS++))
-    else
-        log "GRAFANA_ADMIN_PASSWORD appears secure"
-    fi
-fi
-
-# Check VRRP_PASSWORD (only required for HA modes)
-VRRP_PASSWORD="${VRRP_PASSWORD:-}"
-if [[ -n "$VRRP_PASSWORD" ]]; then
-    if [[ "$VRRP_PASSWORD" == "CHANGE_ME_REQUIRED" ]] || \
-       [[ "$VRRP_PASSWORD" == "SecureVRRPPassword123!" ]] || \
-       [[ "$VRRP_PASSWORD" == "admin" ]] || \
-       [[ "$VRRP_PASSWORD" == "password" ]]; then
-        err "VRRP_PASSWORD is using a default or weak value"
-        err "Generate a secure password with: openssl rand -base64 20"
-        ((VALIDATION_ERRORS++))
-    elif [[ ${#VRRP_PASSWORD} -lt 8 ]]; then
-        err "VRRP_PASSWORD is too short (minimum 8 characters)"
-        ((VALIDATION_ERRORS++))
-    else
-        log "VRRP_PASSWORD appears secure"
-    fi
-fi
-
-echo ""
-echo "Checking IP address formats..."
-
-# Validate IP addresses
-validate_ip() {
-    local ip=$1
-    local name=$2
-    
-    # Allow empty values for optional IPs
-    if [[ -z "$ip" ]]; then
-        return 0
-    fi
-    
-    if [[ ! $ip =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]; then
-        err "$name has invalid IP format: $ip"
-        ((VALIDATION_ERRORS++))
-        return 1
-    fi
-    
-    IFS='.' read -ra ADDR <<< "$ip"
-    for octet in "${ADDR[@]}"; do
-        if [[ $octet -gt 255 ]]; then
-            err "$name has invalid IP (octet > 255): $ip"
-            ((VALIDATION_ERRORS++))
-            return 1
-        fi
-    done
-    
-    log "$name IP is valid: $ip"
-    return 0
-}
-
-# Extract network address and broadcast from CIDR
-# Note: This is a simplified implementation optimized for common /24 networks.
-# For production use with other subnet sizes, consider implementing full CIDR calculation.
-get_network_address() {
-    local cidr=$1
-    local ip="${cidr%/*}"
-    local prefix="${cidr#*/}"
-    
-    # For /24 networks, network is .0 and broadcast is .255
-    if [[ "$prefix" == "24" ]]; then
-        IFS='.' read -ra ADDR <<< "$ip"
-        echo "${ADDR[0]}.${ADDR[1]}.${ADDR[2]}.0"
-    else
-        # For other prefixes, return a simplified calculation
-        # This catches obvious issues but may not be accurate for all subnets
-        IFS='.' read -ra ADDR <<< "$ip"
-        echo "${ADDR[0]}.${ADDR[1]}.${ADDR[2]}.0"
-    fi
-}
-
-get_broadcast_address() {
-    local cidr=$1
-    local ip="${cidr%/*}"
-    local prefix="${cidr#*/}"
-    
-    # For /24 networks, broadcast is .255
-    if [[ "$prefix" == "24" ]]; then
-        IFS='.' read -ra ADDR <<< "$ip"
-        echo "${ADDR[0]}.${ADDR[1]}.${ADDR[2]}.255"
-    else
-        # For other prefixes, assume .255 (simplified)
-        IFS='.' read -ra ADDR <<< "$ip"
-        echo "${ADDR[0]}.${ADDR[1]}.${ADDR[2]}.255"
-    fi
-}
-
-# Check if IP is in subnet (simplified for /24)
-ip_in_subnet() {
-    local ip=$1
-    local subnet=$2
-    local subnet_base="${subnet%/*}"
-    
-    IFS='.' read -ra IP_PARTS <<< "$ip"
-    IFS='.' read -ra SUBNET_PARTS <<< "$subnet_base"
-    
-    # For /24, first 3 octets must match
-    if [[ "${IP_PARTS[0]}" == "${SUBNET_PARTS[0]}" ]] && \
-       [[ "${IP_PARTS[1]}" == "${SUBNET_PARTS[1]}" ]] && \
-       [[ "${IP_PARTS[2]}" == "${SUBNET_PARTS[2]}" ]]; then
-        return 0
-    fi
-    return 1
-}
-
-HOST_IP="${HOST_IP:-}"
-PI1_IP="${PI1_IP:-}"
-PI2_IP="${PI2_IP:-}"
-VIP_ADDRESS="${VIP_ADDRESS:-}"
-GATEWAY="${GATEWAY:-}"
-SUBNET="${SUBNET:-}"
-PRIMARY_DNS_IP="${PRIMARY_DNS_IP:-}"
-SECONDARY_DNS_IP="${SECONDARY_DNS_IP:-}"
-
-validate_ip "$HOST_IP" "HOST_IP"
-validate_ip "$PI1_IP" "PI1_IP"
-validate_ip "$PI2_IP" "PI2_IP"
-validate_ip "$VIP_ADDRESS" "VIP_ADDRESS"
-validate_ip "$GATEWAY" "GATEWAY"
-
-# Also validate PRIMARY_DNS_IP and SECONDARY_DNS_IP if set
-if [[ -n "$PRIMARY_DNS_IP" ]]; then
-    validate_ip "$PRIMARY_DNS_IP" "PRIMARY_DNS_IP"
-fi
-if [[ -n "$SECONDARY_DNS_IP" ]]; then
-    validate_ip "$SECONDARY_DNS_IP" "SECONDARY_DNS_IP"
-fi
-
-# Validate CIDR subnet
-echo ""
-echo "Checking network subnet..."
-if [[ -n "$SUBNET" ]]; then
-    if [[ ! "$SUBNET" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}/[0-9]{1,2}$ ]]; then
-        err "SUBNET has invalid CIDR format: $SUBNET"
-        ((VALIDATION_ERRORS++))
-    else
-        log "SUBNET is valid: $SUBNET"
-        
-        # Check VIP is not network or broadcast address
-        if [[ -n "$VIP_ADDRESS" ]]; then
-            NETWORK_ADDR=$(get_network_address "$SUBNET")
-            BROADCAST_ADDR=$(get_broadcast_address "$SUBNET")
-            
-            if [[ "$VIP_ADDRESS" == "$NETWORK_ADDR" ]]; then
-                err "VIP_ADDRESS ($VIP_ADDRESS) is the network address - please choose a different IP"
-                ((VALIDATION_ERRORS++))
-            elif [[ "$VIP_ADDRESS" == "$BROADCAST_ADDR" ]]; then
-                err "VIP_ADDRESS ($VIP_ADDRESS) is the broadcast address - please choose a different IP (e.g., .249)"
-                ((VALIDATION_ERRORS++))
-            else
-                log "VIP_ADDRESS is not network/broadcast address"
-            fi
-            
-            # Check VIP is in the same subnet
-            if ! ip_in_subnet "$VIP_ADDRESS" "$SUBNET"; then
-                err "VIP_ADDRESS ($VIP_ADDRESS) is not in the subnet $SUBNET"
-                ((VALIDATION_ERRORS++))
-            else
-                log "VIP_ADDRESS is in subnet $SUBNET"
-            fi
-        fi
-        
-        # Check HOST_IP is in subnet
-        if [[ -n "$HOST_IP" ]]; then
-            if ! ip_in_subnet "$HOST_IP" "$SUBNET"; then
-                err "HOST_IP ($HOST_IP) is not in the subnet $SUBNET"
-                ((VALIDATION_ERRORS++))
-            else
-                log "HOST_IP is in subnet $SUBNET"
-            fi
-        fi
-        
-        # Check PI1_IP and PI2_IP are in subnet (for two-pi-ha)
-        if [[ -n "$PI1_IP" ]]; then
-            if ! ip_in_subnet "$PI1_IP" "$SUBNET"; then
-                err "PI1_IP ($PI1_IP) is not in the subnet $SUBNET"
-                ((VALIDATION_ERRORS++))
-            fi
-        fi
-        if [[ -n "$PI2_IP" ]]; then
-            if ! ip_in_subnet "$PI2_IP" "$SUBNET"; then
-                err "PI2_IP ($PI2_IP) is not in the subnet $SUBNET"
-                ((VALIDATION_ERRORS++))
-            fi
-        fi
-    fi
-fi
-
-# For two-pi-ha, check that HOST_IP matches either PI1_IP or PI2_IP
-if [[ "${DEPLOYMENT_MODE:-}" == "two-pi-ha" ]]; then
-    echo ""
-    echo "Checking two-pi-ha specific configuration..."
-    
-    if [[ -n "$HOST_IP" ]] && [[ -n "$PI1_IP" ]] && [[ -n "$PI2_IP" ]]; then
-        if [[ "$HOST_IP" != "$PI1_IP" ]] && [[ "$HOST_IP" != "$PI2_IP" ]]; then
-            err "HOST_IP ($HOST_IP) should match either PI1_IP ($PI1_IP) or PI2_IP ($PI2_IP)"
-            ((VALIDATION_ERRORS++))
-        else
-            log "HOST_IP matches one of the Pi IPs"
-        fi
-    fi
-    
-    # Check KEEPALIVED_PRIORITY is set
-    KEEPALIVED_PRIORITY="${KEEPALIVED_PRIORITY:-}"
-    if [[ -z "$KEEPALIVED_PRIORITY" ]]; then
-        warn "KEEPALIVED_PRIORITY not set - using default. Set to 100 for Pi1 (MASTER) or 90 for Pi2 (BACKUP)"
-        ((VALIDATION_WARNINGS++))
-    else
-        if [[ "$KEEPALIVED_PRIORITY" -lt 1 ]] || [[ "$KEEPALIVED_PRIORITY" -gt 255 ]]; then
-            err "KEEPALIVED_PRIORITY must be between 1 and 255"
-            ((VALIDATION_ERRORS++))
-        else
-            log "KEEPALIVED_PRIORITY is valid: $KEEPALIVED_PRIORITY"
-        fi
-    fi
-fi
-
-# Check file format (no syntax errors)
-echo ""
-echo "Checking .env file format..."
-line_num=0
-format_errors=0
-while IFS= read -r line; do
-    ((line_num++))
-    
-    # Skip empty lines and comments
-    [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
-    
-    # Check if line matches KEY=VALUE format
-    if ! [[ "$line" =~ ^[A-Za-z_][A-Za-z0-9_]*=.*$ ]]; then
-        err "Line $line_num: Invalid format: $line"
-        ((VALIDATION_ERRORS++))
-        ((format_errors++))
-    fi
-done < "$ENV_FILE"
-
-if [[ $format_errors -eq 0 ]]; then
-    log ".env file format is valid"
-fi
-
-echo ""
-echo "=========================================="
-if [[ $VALIDATION_ERRORS -eq 0 ]]; then
-    if [[ $VALIDATION_WARNINGS -gt 0 ]]; then
-        warn "Validation PASSED with $VALIDATION_WARNINGS warnings"
-    else
-        log "Validation PASSED - .env file is ready for deployment"
-    fi
-    exit 0
+# --- secrets ---------------------------------------------------------------
+echo; echo "Secrets..."
+WEBPASSWORD="$(kv WEBPASSWORD)"
+if is_placeholder "$WEBPASSWORD"; then
+  err "WEBPASSWORD is still a placeholder — set a strong, unique value"; ((ERRORS++))
+elif [[ ${#WEBPASSWORD} -lt 8 ]]; then
+  err "WEBPASSWORD is too short (min 8 characters)"; ((ERRORS++))
 else
-    err "Validation FAILED with $VALIDATION_ERRORS errors"
-    err "Please fix the errors above before deploying"
-    exit 1
+  log "WEBPASSWORD looks set"
+fi
+
+if [[ $HA -eq 1 ]]; then
+  VRRP_PASSWORD="$(kv VRRP_PASSWORD)"
+  if is_placeholder "$VRRP_PASSWORD"; then
+    err "VRRP_PASSWORD is still a placeholder — set it (and match the peer)"; ((ERRORS++))
+  elif [[ ${#VRRP_PASSWORD} -ne 8 ]]; then
+    err "VRRP_PASSWORD must be EXACTLY 8 characters (got ${#VRRP_PASSWORD}) — VRRP auth truncates otherwise"; ((ERRORS++))
+  else
+    log "VRRP_PASSWORD is exactly 8 characters"
+  fi
+fi
+
+# --- IP addresses ----------------------------------------------------------
+echo; echo "Addresses..."
+NODE_IP="$(kv NODE_IP)"
+check_ipv4 NODE_IP "$NODE_IP"
+
+if [[ $HA -eq 1 ]]; then
+  VIP_ADDRESS="$(kv VIP_ADDRESS)"; PEER_IP="$(kv PEER_IP)"; UNICAST_SRC_IP="$(kv UNICAST_SRC_IP)"
+  check_ipv4 VIP_ADDRESS "$VIP_ADDRESS"
+  check_ipv4 PEER_IP "$PEER_IP"
+  check_ipv4 UNICAST_SRC_IP "$UNICAST_SRC_IP"
+
+  # KEEPALIVED_PRIORITY range
+  PRI="$(kv KEEPALIVED_PRIORITY)"
+  if [[ -n "$PRI" ]]; then
+    if [[ "$PRI" =~ ^[0-9]+$ ]] && ((PRI >= 1 && PRI <= 255)); then
+      log "KEEPALIVED_PRIORITY $PRI in range"
+    else
+      err "KEEPALIVED_PRIORITY must be 1-255 (got '$PRI')"; ((ERRORS++))
+    fi
+  fi
+
+  # UNICAST_SRC_IP should be THIS node, PEER_IP the other — they must differ
+  if [[ -n "$UNICAST_SRC_IP" && "$UNICAST_SRC_IP" == "$PEER_IP" ]]; then
+    err "UNICAST_SRC_IP and PEER_IP are identical ($PEER_IP) — they must be the two different node IPs"; ((ERRORS++))
+  fi
+  if [[ -n "$NODE_IP" && -n "$UNICAST_SRC_IP" && "$NODE_IP" != "$UNICAST_SRC_IP" ]]; then
+    warn "UNICAST_SRC_IP ($UNICAST_SRC_IP) != NODE_IP ($NODE_IP) — usually they should match"; ((WARNINGS++))
+  fi
+
+  # same /24 sanity (warn only — exotic topologies exist)
+  for other in "$VIP_ADDRESS" "$PEER_IP"; do
+    if [[ -n "$NODE_IP" && -n "$other" ]] && valid_ipv4 "$NODE_IP" && valid_ipv4 "$other" \
+       && ! same_subnet24 "$NODE_IP" "$other"; then
+      warn "$other is not in the same /24 as NODE_IP ($NODE_IP) — confirm this is intended"; ((WARNINGS++))
+    fi
+  done
+fi
+
+# --- host-environment warnings (non-fatal) ---------------------------------
+echo; echo "Host environment..."
+IFACE="$(kv NETWORK_INTERFACE)"
+if [[ -n "$IFACE" ]]; then
+  if command -v ip >/dev/null 2>&1; then
+    if ip link show "$IFACE" >/dev/null 2>&1; then
+      log "interface $IFACE exists"
+    else
+      warn "interface $IFACE not found on this host (ok if configuring before the NIC is up)"; ((WARNINGS++))
+    fi
+  fi
+fi
+if [[ $HA -eq 1 && -n "${PEER_IP:-}" ]] && valid_ipv4 "${PEER_IP:-}"; then
+  if command -v ping >/dev/null 2>&1; then
+    if ping -c1 -W1 "$PEER_IP" >/dev/null 2>&1; then
+      log "peer $PEER_IP is reachable"
+    else
+      warn "peer $PEER_IP not reachable yet (normal if the other node isn't up)"; ((WARNINGS++))
+    fi
+  fi
+fi
+
+# --- file format -----------------------------------------------------------
+echo; echo "File format..."
+fmt_errors=0; n=0
+while IFS= read -r line; do
+  ((n++))
+  [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
+  if ! [[ "$line" =~ ^[A-Za-z_][A-Za-z0-9_]*= ]]; then
+    err "line $n: not KEY=VALUE: $line"; ((ERRORS++)); ((fmt_errors++))
+  fi
+done < "$ENV_FILE"
+[[ $fmt_errors -eq 0 ]] && log ".env format is valid"
+
+# --- verdict ---------------------------------------------------------------
+echo
+echo "=========================================="
+if [[ $ERRORS -eq 0 ]]; then
+  if [[ $WARNINGS -gt 0 ]]; then warn "Preflight PASSED with $WARNINGS warning(s)"; else log "Preflight PASSED — ready to start"; fi
+  exit 0
+else
+  err "Preflight FAILED with $ERRORS error(s) — fix the above before starting"
+  exit 1
 fi

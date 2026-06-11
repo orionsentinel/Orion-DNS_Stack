@@ -13,8 +13,7 @@ reproduction steps and affected versions/commit.
   git-ignored; only `*.env.example` templates are tracked. CI runs a Trivy
   secret scan that **fails the build** if a credential is committed.
 - Secrets to protect: `VRRP_PASSWORD`, `WEBPASSWORD`,
-  `FTLCONF_webserver_api_password`, any `LOKI_URL`/token, SSH keys used for
-  Pi-hole sync.
+  `FTLCONF_webserver_api_password`, and the SSH keys used for Pi-hole sync.
 - Keep them in a password manager so a node rebuild (`docs/disaster-recovery.md`)
   can repopulate `.env` without relying on git.
 
