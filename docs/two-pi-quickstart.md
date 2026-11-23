@@ -97,7 +97,10 @@ router + IPv6 details: **[client-network-setup.md](client-network-setup.md)**.
   external check, run a single Uptime-Kuma container elsewhere pointed at the VIP.
 - **Automated backups + boot persistence:** install the systemd timers — see
   [disaster-recovery.md](disaster-recovery.md) and `../systemd/README.md`.
-- **Pi-hole config sync** (primary → secondary): `scripts/pihole-sync.sh` + timer.
+- **Pi-hole config sync** (primary → secondary): the `nebula-sync` container starts
+  with the primary profile and pushes adlists, allow/deny lists, groups, clients and
+  local DNS records to the secondary hourly. Change settings on the primary only.
+  Check it with `docker logs nebula-sync`; tune via `SYNC_CRON` in `.env`.
 
 ## Trouble?
 
