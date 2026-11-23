@@ -26,6 +26,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   secrets → `bootstrap --yes` → install systemd units). Flash a card, fill two secrets,
   boot — the node installs itself. See `provisioning/README.md`.
 
+### Added - API-based Pi-hole config sync
+
+- **`nebula-sync` service** in the `two-node-ha-primary` profile: hourly one-way sync
+  of adlists, domain lists, groups, clients and local DNS records to `PEER_IP` over the
+  Pi-hole v6 API. Replaces the need for the SSH-based `scripts/pihole-sync.sh`, which
+  targets Pi-hole v5 file paths. New optional `.env` keys: `SYNC_CRON`,
+  `SYNC_REPLICA_PASSWORD`.
+
 ### Removed
 
 - **`scripts/doctor.sh`** — a Suricata/EveBox "NetSec" diagnostic that belonged to a
